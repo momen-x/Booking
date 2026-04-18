@@ -1,0 +1,7 @@
+import { UserRole } from "@prisma/client";
+
+export type JWTPayloadType = {
+  sub: string;
+  email: string;
+  role: UserRole;
+};

@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+
+  provider ProviderProfile?
+  bookings Booking[]
+}
+
+model ProviderProfile {
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  businessName String
+  description  String?
+  location     String?
+
+  user         User           @relation(fields: [userId], references: [id])
+  services     Service[]
+  availability Availability[]
+  bookings     Booking[]
+
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id         String @id @default(uuid())
+  providerId String
+  name       String
+  duration   Int
+  price      Float
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id])
+  bookings Booking[]
+
+  createdAt DateTime @default(now())
+}
+
+model Availability {
+  id         String @id @default(uuid())
+  providerId String
+  dayOfWeek  Int
+  startTime  Int
+  endTime    Int
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id])
+
+  @@index([providerId, dayOfWeek])
+}
+
+model Booking {
+  id         String @id @default(uuid())
+  userId     String
+  providerId String
+  serviceId  String
+
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+
+  status BookingStatus @default(PENDING)
+
+  user     User            @relation(fields: [userId], references: [id])
+  provider ProviderProfile @relation(fields: [providerId], references: [id])
+  service  Service         @relation(fields: [serviceId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([providerId, date])
+  @@index([userId])
+}
+
+enum UserRole {
+  USER
+  PROVIDER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
