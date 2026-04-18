@@ -1,4 +1,17 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateProviderProfileDto } from './create-provider-profile.dto';
+import { IsOptional, IsString } from "class-validator";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 
-export class UpdateProviderProfileDto extends PartialType(CreateProviderProfileDto) {}
+export class UpdateProviderProfileDto {
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  businessName?: string;
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  description?: string;
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  location?: string;
+}

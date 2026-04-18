@@ -19,6 +19,6 @@ import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
     AuthRolesGuard,
   ],
   imports: [JwtModule, PrismaModule],
-  exports: [UsersService],
+  exports: [UsersService, AuthRolesGuard],
 })
 export class UsersModule {}

@@ -1,14 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ProviderProfileService } from './provider-profile.service';
-import { CreateProviderProfileDto } from './dto/create-provider-profile.dto';
-import { UpdateProviderProfileDto } from './dto/update-provider-profile.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  UseGuards,
+} from "@nestjs/common";
+import { ProviderProfileService } from "./provider-profile.service";
+import { UpdateProviderProfileDto } from "./dto/update-provider-profile.dto";
+import { UserRole } from "@prisma/client";
+import { Roles } from "src/users/decorator/user-role.decorator";
+import { AuthRolesGuard } from "src/users/role.guard";
+import { AuthGuard } from "@nestjs/passport";
+import { CurrentUser } from "src/users/decorator/current-user.decorator";
+import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
 
-@Controller('provider-profile')
+@Controller("provider-profile")
 export class ProviderProfileController {
-  constructor(private readonly providerProfileService: ProviderProfileService) {}
+  constructor(
+    private readonly providerProfileService: ProviderProfileService,
+  ) {}
 
   @Post()
-  create(@Body() createProviderProfileDto: CreateProviderProfileDto) {
+  @Roles(UserRole.ADMIN) // Only admin can create products
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  create(
+    @Body()
+    createProviderProfileDto: CreateProviderProfileDto,
+  ) {
     return this.providerProfileService.create(createProviderProfileDto);
   }
 
@@ -17,18 +38,32 @@ export class ProviderProfileController {
     return this.providerProfileService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.providerProfileService.findOne(+id);
+  @Get(":id")
+  findOne(@Param("id") id: string) {
+    return this.providerProfileService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProviderProfileDto: UpdateProviderProfileDto) {
-    return this.providerProfileService.update(+id, updateProviderProfileDto);
+  @Put(":id")
+  @Roles(UserRole.PROVIDER, UserRole.ADMIN)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  update(
+    @Param("id") id: string,
+    @Body() updateProviderProfileDto: UpdateProviderProfileDto,
+    @CurrentUser()
+    user: { id: string; email?: string; role?: UserRole } | undefined,
+  ) {
+    return this.providerProfileService.update(
+      id,
+      user?.id ?? "",
+      user?.role ?? "",
+      updateProviderProfileDto,
+    );
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.providerProfileService.remove(+id);
+  @Delete(":id")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  remove(@Param("id") id: string) {
+    return this.providerProfileService.remove(id);
   }
 }
