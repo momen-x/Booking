@@ -7,5 +7,17 @@ export abstract class ServiceRepository {
   abstract findServiceById(id: string): Promise<Service | null>;
   abstract findServicesByProviderId(providerId: string): Promise<Service[]>;
   abstract updateService(id: string, dto: UpdateServiceDto): Promise<Service>;
-  abstract deleteService(userid: string): Promise<{ message: string }>;
+  abstract deleteService(id: string): Promise<Service>;
+  abstract addServiceImages(
+    serviceId: string,
+    imagesUrl: string[],
+  ): Promise<{ message: string }>;
+  abstract deleteServiceImage(
+    serviceId: string,
+    updatedImages: string[],
+  ): Promise<{ message: string }>;
+  abstract replaceServiceImage(
+    serviceId: string,
+    existingImages: string[],
+  ): Promise<{ message: string }>;
 }

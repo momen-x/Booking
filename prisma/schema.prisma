@@ -39,6 +39,7 @@ model Service {
   name       String
   duration   Int
   price      Float
+  images     String[]
 
   provider ProviderProfile @relation(fields: [providerId], references: [id])
   bookings Booking[]

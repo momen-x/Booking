@@ -6,5 +6,6 @@ export class Service {
     public duration: number,
     public price: number,
     public createdAt: Date,
+    public images: string[],
   ) {}
 }

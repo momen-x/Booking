@@ -9,7 +9,13 @@ export class PrismaServiceRepository implements ServiceRepository {
   constructor(private readonly prisma: PrismaService) {}
   async createService(dto: CreateServiceDto): Promise<Service> {
     const newService = await this.prisma.service.create({
-      data: dto,
+      data: {
+        providerId: dto.providerId,
+        name: dto.name,
+        duration: dto.duration,
+        price: dto.price,
+        images: [],
+      },
     });
     return newService;
   }
@@ -19,18 +25,43 @@ export class PrismaServiceRepository implements ServiceRepository {
     return service;
   }
   async findServicesByProviderId(providerId: string): Promise<Service[]> {
-    const provide = await this.prisma.providerProfile.findUnique({
-      where: { id: providerId },
-    });
-    if (!provide)
-      throw new NotFoundException("this provider profile does not exist!");
     return this.prisma.service.findMany({ where: { providerId } });
   }
   async updateService(id: string, dto: UpdateServiceDto): Promise<Service> {
     return this.prisma.service.update({ where: { id }, data: dto });
   }
-  async deleteService(id: string): Promise<{ message: string }> {
-    await this.prisma.service.delete({ where: { id } });
-    return { message: "Service deleted successfully!" };
+  async deleteService(id: string) {
+    return await this.prisma.service.delete({ where: { id } });
+  }
+  async addServiceImages(
+    serviceId: string,
+    images: string[],
+  ): Promise<{ message: string }> {
+    await this.prisma.service.update({
+      where: { id: serviceId },
+      data: { images: images },
+    });
+    return { message: "Service images added successfully" };
+  }
+  async deleteServiceImage(
+    serviceId: string,
+    updatedImages: string[],
+  ): Promise<{ message: string }> {
+    await this.prisma.service.update({
+      where: { id: serviceId },
+      data: { images: updatedImages },
+    });
+    return { message: "Image deleted successfully" };
+  }
+
+  async replaceServiceImage(
+    serviceId: string,
+    existingImages: string[],
+  ): Promise<{ message: string }> {
+    await this.prisma.service.update({
+      where: { id: serviceId },
+      data: { images: existingImages },
+    });
+    return { message: "Image replaced successfully" };
   }
 }
