@@ -1,5 +1,5 @@
-import { UpdateProviderDto } from "src/providers/dto/update-provider.dto";
 import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
+import { UpdateProviderProfileDto } from "./dto/update-provider-profile.dto";
 import { ProviderProfile } from "./entities/provider-profile.entity";
 
 export abstract class ProviderProfileRepository {
@@ -11,8 +11,6 @@ export abstract class ProviderProfileRepository {
   abstract deleteProvider(id: string): Promise<{ message: string }>;
   abstract updateProviderProfile(
     id: string,
-    userId: string,
-    role: string,
-    data: UpdateProviderDto,
+    data: UpdateProviderProfileDto,
   ): Promise<ProviderProfile>;
 }

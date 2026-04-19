@@ -7,6 +7,7 @@ import {
   Delete,
   Put,
   UseGuards,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { ProviderProfileService } from "./provider-profile.service";
 import { UpdateProviderProfileDto } from "./dto/update-provider-profile.dto";
@@ -29,8 +30,15 @@ export class ProviderProfileController {
   create(
     @Body()
     createProviderProfileDto: CreateProviderProfileDto,
+    @CurrentUser()
+    user: { id: string; email: string; role: UserRole } | undefined,
   ) {
-    return this.providerProfileService.create(createProviderProfileDto);
+    if (!user) throw new UnauthorizedException();
+    return this.providerProfileService.create(
+      user.id,
+      user.role,
+      createProviderProfileDto,
+    );
   }
 
   @Get()
@@ -50,12 +58,13 @@ export class ProviderProfileController {
     @Param("id") id: string,
     @Body() updateProviderProfileDto: UpdateProviderProfileDto,
     @CurrentUser()
-    user: { id: string; email?: string; role?: UserRole } | undefined,
+    user: { id: string; email: string; role: UserRole } | undefined,
   ) {
+    if (!user) throw new UnauthorizedException();
     return this.providerProfileService.update(
       id,
-      user?.id ?? "",
-      user?.role ?? "",
+      user.id,
+      user.role,
       updateProviderProfileDto,
     );
   }
@@ -63,7 +72,13 @@ export class ProviderProfileController {
   @Delete(":id")
   @Roles(UserRole.ADMIN)
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  remove(@Param("id") id: string) {
-    return this.providerProfileService.remove(id);
+  remove(
+    @Param("id") id: string,
+    @CurrentUser()
+    user: { id: string; email: string; role: UserRole } | undefined,
+  ) {
+    if (!user) throw new UnauthorizedException();
+
+    return this.providerProfileService.remove(user.id, user.role, id);
   }
 }
