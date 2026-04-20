@@ -7,7 +7,6 @@ import {
   Delete,
   Put,
   UseGuards,
-  UnauthorizedException,
   UseInterceptors,
   UploadedFiles,
   BadRequestException,
@@ -15,7 +14,7 @@ import {
 import { ServiceAppService } from "./service.service";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
-import { CurrentUser } from "src/users/decorator/current-user.decorator";
+import { AuthenticatedUser } from "src/users/decorator/authenticated-user.decorator";
 import { UserRole } from "@prisma/client";
 import {
   ApiBody,
@@ -45,10 +44,9 @@ export class ServiceController {
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
   create(
     @Body() createServiceDto: CreateServiceDto,
-    @CurrentUser()
-    user: { id: string; email: string; role: UserRole } | undefined,
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     return this.serviceService.create(user.id, user.role, createServiceDto);
   }
 
@@ -74,10 +72,9 @@ export class ServiceController {
   update(
     @Param("id") id: string,
     @Body() updateServiceDto: UpdateServiceDto,
-    @CurrentUser()
-    user: { id: string; email: string; role: UserRole } | undefined,
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     return this.serviceService.update(id, user.id, user.role, updateServiceDto);
   }
 
@@ -88,10 +85,9 @@ export class ServiceController {
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
   remove(
     @Param("id") id: string,
-    @CurrentUser()
-    user: { id: string; email: string; role: UserRole } | undefined,
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     return this.serviceService.remove(id, user.role, user.id);
   }
   @Post(":id/images")
@@ -105,9 +101,8 @@ export class ServiceController {
   uploadImages(
     @Param("id") serviceId: string,
     @UploadedFiles() files: Express.Multer.File[],
-    @CurrentUser() user: { id: string; role: UserRole } | undefined,
+    @AuthenticatedUser() user: { id: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     if (!files || files.length === 0)
       throw new BadRequestException("No files uploaded");
     return this.serviceService.uploadServiceImages(
@@ -129,9 +124,8 @@ export class ServiceController {
   removeImage(
     @Param("id") serviceId: string,
     @Body("imageUrl") imageUrl: string,
-    @CurrentUser() user: { id: string; role: UserRole } | undefined,
+    @AuthenticatedUser() user: { id: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     if (!imageUrl) throw new BadRequestException("imageUrl is required");
     return this.serviceService.removeServiceImage(
       serviceId,
@@ -161,9 +155,8 @@ export class ServiceController {
     @Param("id") serviceId: string,
     @UploadedFiles() files: Express.Multer.File[],
     @Body("oldImageUrl") oldImageUrl: string,
-    @CurrentUser() user: { id: string; role: UserRole } | undefined,
+    @AuthenticatedUser() user: { id: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     if (!files || files.length === 0)
       throw new BadRequestException("No file uploaded");
     if (!oldImageUrl) throw new BadRequestException("oldImageUrl is required");

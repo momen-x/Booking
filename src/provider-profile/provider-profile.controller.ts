@@ -7,7 +7,6 @@ import {
   Delete,
   Put,
   UseGuards,
-  UnauthorizedException,
 } from "@nestjs/common";
 import { ProviderProfileService } from "./provider-profile.service";
 import { UpdateProviderProfileDto } from "./dto/update-provider-profile.dto";
@@ -15,7 +14,7 @@ import { UserRole } from "@prisma/client";
 import { Roles } from "src/users/decorator/user-role.decorator";
 import { AuthRolesGuard } from "src/users/role.guard";
 import { AuthGuard } from "@nestjs/passport";
-import { CurrentUser } from "src/users/decorator/current-user.decorator";
+import { AuthenticatedUser } from "src/users/decorator/authenticated-user.decorator";
 import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
 
 @Controller("provider-profile")
@@ -30,10 +29,9 @@ export class ProviderProfileController {
   create(
     @Body()
     createProviderProfileDto: CreateProviderProfileDto,
-    @CurrentUser()
-    user: { id: string; email: string; role: UserRole } | undefined,
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     return this.providerProfileService.create(
       user.id,
       user.role,
@@ -57,10 +55,9 @@ export class ProviderProfileController {
   update(
     @Param("id") id: string,
     @Body() updateProviderProfileDto: UpdateProviderProfileDto,
-    @CurrentUser()
-    user: { id: string; email: string; role: UserRole } | undefined,
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
     return this.providerProfileService.update(
       id,
       user.id,
@@ -74,11 +71,9 @@ export class ProviderProfileController {
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
   remove(
     @Param("id") id: string,
-    @CurrentUser()
-    user: { id: string; email: string; role: UserRole } | undefined,
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
   ) {
-    if (!user) throw new UnauthorizedException();
-
     return this.providerProfileService.remove(user.id, user.role, id);
   }
 }

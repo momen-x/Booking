@@ -1,7 +1,15 @@
 export class Availability {
-  id!: number; //(PK)
-  providerId!: number; //(FK)
-  dayOfWeek!: number; //(0-6)
-  startTime!: number;
-  endTime!: number;
+  constructor(
+    public id: string,
+    public providerId: string,
+    public dayOfWeek: number, //(0-6)
+    public startTime: number,
+    public endTime: number,
+  ) {}
+}
+export class ReturnAvailability {
+  constructor(
+    public start: Date,
+    public end: Date,
+  ) {}
 }
