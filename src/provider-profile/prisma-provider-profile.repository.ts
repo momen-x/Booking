@@ -31,7 +31,7 @@ export class PrismaProviderProfileRepository implements ProviderProfileRepositor
   }
   getAllProviders(): Promise<ProviderProfile[]> {
     return this.prisma.providerProfile.findMany({
-      include: { user: true, services: true, availability: true },
+      where: { isActive: true },
     }) as Promise<ProviderProfile[]>;
   }
   findById(id: string): Promise<ProviderProfile | null> {

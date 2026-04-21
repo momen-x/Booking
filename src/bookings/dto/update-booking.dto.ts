@@ -1,5 +1,6 @@
-import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsDateString, IsOptional } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional } from "class-validator";
+import { BookingStatus } from "utils/enums";
 
 export class UpdateBookingDto {
   @IsDateString()
@@ -21,4 +22,10 @@ export class UpdateBookingDto {
     description: "End time of the booking",
   })
   endTime?: Date;
+}
+export class updateBookingStatus {
+  @IsEnum(BookingStatus)
+  @IsNotEmpty()
+  @ApiProperty()
+  status!: BookingStatus;
 }
