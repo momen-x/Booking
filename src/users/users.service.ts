@@ -1,63 +1,97 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { UserRepository } from "./user.repository";
 import {
   UpdateUserPasswordByAdminDto,
   UpdateUserPasswordDto,
 } from "./dto/update-user.dto";
 import * as bcrypt from "bcryptjs";
+import { User } from "./entities/user.entity";
 
 @Injectable()
 export class UsersService {
   constructor(private userRepo: UserRepository) {}
-  findAll() {
-    return this.userRepo.getAllUsers();
+  async findAll() {
+    const users = await this.userRepo.getAllUsers();
+    return users.map((user) => this.mapper(user));
   }
 
-  findOneById(id: string) {
-    return this.userRepo.findById(id);
+  async findOneById(id: string) {
+    const user = await this.checkIfUserExist(id);
+    return this.mapper(user);
   }
-  findOneByEmail(email: string) {
-    return this.userRepo.findByEmail(email);
+  async findOneByEmail(email: string) {
+    const user = await this.userRepo.findByEmail(email);
+    if (!user) throw new NotFoundException("the user not found");
+    return this.mapper(user);
   }
 
-  updateUsername(id: string, username: string) {
-    return this.userRepo.updateUserName(id, username);
+  async updateUsername(id: string, username: string) {
+    await this.checkIfUserExist(id);
+    const updateUser = await this.userRepo.updateUserName(id, username);
+    return this.mapper(updateUser);
   }
-  async updatePassword(
-    id: string,
-    updateUserPasswordDto: UpdateUserPasswordDto,
-  ) {
-    const isUserExist = await this.userRepo.findById(id);
-    if (!isUserExist) throw new BadRequestException("User not found");
-    const { oldPassword, password, confirmPassword } = updateUserPasswordDto;
+  async updatePassword(id: string, dto: UpdateUserPasswordDto) {
+    const user = await this.checkIfUserExist(id);
+    const { oldPassword, password, confirmPassword } = dto;
     if (password !== confirmPassword)
       throw new BadRequestException("Passwords do not match");
 
-    const isPasswordMatch = await bcrypt.compare(
-      oldPassword,
-      isUserExist.password,
-    );
+    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isPasswordMatch)
       throw new BadRequestException("Current password is incorrect");
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    return this.userRepo.updatePassword(id, hashedPassword);
+    const updateUserPassword = await this.userRepo.updatePassword(
+      id,
+      hashedPassword,
+    );
+    return this.mapper(updateUserPassword);
   }
 
-  async updatePasswordByAdmin(
-    id: string,
-    updateUserPasswordByAdminDto: UpdateUserPasswordByAdminDto,
-  ) {
-    const { password } = updateUserPasswordByAdminDto;
+  async updatePasswordByAdmin(dto: UpdateUserPasswordByAdminDto) {
+    const { password, email } = dto;
+    const user = await this.userRepo.findByEmail(email);
+    if (!user) throw new NotFoundException("user not found");
     const hashedPassword = await bcrypt.hash(password, 12);
+    const updateUserPassword = await this.userRepo.updatePassword(
+      user.id,
+      hashedPassword,
+    );
 
-    return this.userRepo.updatePassword(id, hashedPassword);
+    return this.mapper(updateUserPassword);
   }
 
-  remove(id: string) {
-    return this.userRepo.deleteUser(id);
+  async remove(id: string) {
+    const user = await this.checkIfUserExist(id);
+    if (user.role === "ADMIN")
+      throw new UnauthorizedException("this is Admin account");
+    const deletingAccount = await this.userRepo.deleteUser(user.id);
+    return this.mapper(deletingAccount);
   }
-  async currentUser(userId: string) {
-    return this.userRepo.getCurrentUser(userId);
+  // async currentUser(userId: string) {
+  //   const currentUser = await this.userRepo.getCurrentUser(userId);
+  //   if (!currentUser)
+  //     throw new NotFoundException("this user is does not exist");
+  //   return this.mapper(currentUser);
+  // }
+  private async checkIfUserExist(id: string) {
+    const user = await this.userRepo.findById(id);
+    if (!user) throw new NotFoundException("the user does not exist");
+    return user;
+  }
+  private mapper(user: User) {
+    const { createdAt, email, id, role, username } = user;
+    return {
+      id,
+      username,
+      email,
+      role,
+      createdAt,
+    };
   }
 }

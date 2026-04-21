@@ -20,6 +20,7 @@ import {
   UpdateUserPasswordDto,
 } from "./dto/update-user.dto";
 import { CurrentUser } from "./decorator/current-user.decorator";
+import { AuthenticatedUser } from "./decorator/authenticated-user.decorator";
 
 @Controller("users")
 export class UsersController {
@@ -42,10 +43,12 @@ export class UsersController {
   @Roles(UserRole.ADMIN, UserRole.USER, UserRole.PROVIDER)
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
   async getCurrentUser(
-    @CurrentUser()
-    user: { id: string; email?: string } | undefined,
+    @AuthenticatedUser()
+    user: {
+      id: string;
+    },
   ) {
-    return await this.usersService.currentUser(user?.id ?? "");
+    return await this.usersService.findOneById(user.id);
   }
 
   @Get(":id")
@@ -112,21 +115,20 @@ export class UsersController {
     );
   }
   /**
-   * @route PUT ~/api/users/:id/password
+   * @route PUT ~/api/users/admin/update-password
    * @description update user password account by the admin
    * @returns user data
    * @access private just the user admin can update the user account by this route
    */
-  @Put(":id/password")
+  @Put("admin/password")
   @ApiResponse({ status: 200, description: "password updated successfully" })
   @ApiOperation({ summary: "update user password by admin" })
   @Roles(UserRole.ADMIN)
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
   updatePasswordByAdmin(
-    @Param("id") id: string,
     @Body() updateUserPasswordDto: UpdateUserPasswordByAdminDto,
   ) {
-    return this.usersService.updatePasswordByAdmin(id, updateUserPasswordDto);
+    return this.usersService.updatePasswordByAdmin(updateUserPasswordDto);
   }
   /**
    * @route DELETE ~/api/users

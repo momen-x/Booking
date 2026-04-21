@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsNotEmpty,
   Length,
   Validate,
@@ -38,6 +39,9 @@ export class UpdateUserPasswordByAdminDto {
   @IsNotEmpty()
   @Length(8, 128)
   password!: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
 }
 export class UpdateUsername {
   @IsNotEmpty()

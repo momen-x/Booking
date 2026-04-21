@@ -82,7 +82,7 @@ export class AvailabilityService {
 
     await this.checkProviderOwnership(availability.providerId, userId, role);
 
-    return this.availabilityRepo.deleteAvailability(id);
+    return await this.availabilityRepo.deleteAvailability(id);
   }
   private async checkProviderOwnership(
     providerId: string,

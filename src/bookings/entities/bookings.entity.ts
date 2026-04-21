@@ -1,14 +1,15 @@
-import { BookingStatus } from "utils/enums";
+import { BookingStatus } from "@prisma/client";
 
-export class User {
+export class Booking {
   constructor(
-    public id: number, //(PK)
-    public userId: number, //(FK)
-    public providerId: number, //(FK)
-    public serviceId: number, // (FK)
+    public id: string, //(PK)
+    public userId: string, //(FK)
+    public providerId: string, //(FK)
+    public serviceId: string, // (FK)
     public date: Date,
     public startTime: Date,
     public endTime: Date,
-    public status: BookingStatus,
+    public status: BookingStatus, // (PENDING, CONFIRMED, CANCELLED)
+    public createdAt: Date,
   ) {}
 }
