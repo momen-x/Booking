@@ -9,7 +9,7 @@ import { BookingsModule } from "./bookings/bookings.module";
 import { ProviderProfileModule } from "./provider-profile/provider-profile.module";
 import { ReviewModule } from "./review/review.module";
 import { ServiceModule } from "./service/service.module";
-import { PaymentsModule } from './payments/payments.module';
+import { PaymentsModule } from "./payments/payments.module";
 
 @Module({
   controllers: [AppController],

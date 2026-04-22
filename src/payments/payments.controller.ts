@@ -1,34 +1,54 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { PaymentsService } from './payments.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
+// src/payments/payments.controller.ts
+import * as common from "@nestjs/common";
+import { PaymentsService } from "./payments.service";
+import { AuthGuard } from "@nestjs/passport";
+import { CurrentUser } from "src/users/decorator/current-user.decorator";
+import { UserRole } from "@prisma/client";
+import { ApiOperation, ApiResponse } from "@nestjs/swagger";
+import * as express from "express";
 
-@Controller('payments')
+@common.Controller("payments")
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post()
-  create(@Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentsService.create(createPaymentDto);
+  @common.Post("initiate/:bookingId")
+  @common.UseGuards(AuthGuard("jwt"))
+  @ApiOperation({ summary: "Initiate payment for a booking" })
+  @ApiResponse({ status: 201, description: "Returns clientSecret for Stripe" })
+  initiatePayment(
+    @common.Param("bookingId") bookingId: string,
+    @CurrentUser() user: { id: string; role: UserRole } | undefined,
+  ) {
+    if (!user) throw new common.UnauthorizedException();
+    return this.paymentsService.initiatePayment(bookingId, user.id);
   }
 
-  @Get()
-  findAll() {
-    return this.paymentsService.findAll();
+  // ⚠️ No JWT guard here — Stripe calls this, not your users
+  @common.Post("webhook")
+  @ApiOperation({ summary: "Stripe webhook handler" })
+  handleWebhook(
+    @common.Req() req: common.RawBodyRequest<express.Request>,
+    @common.Headers("stripe-signature") signature: string,
+  ) {
+    return this.paymentsService.handleWebhook(req.rawBody!, signature);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.paymentsService.findOne(+id);
+  @common.Post("refund/:bookingId")
+  @common.UseGuards(AuthGuard("jwt"))
+  @ApiOperation({ summary: "Refund a payment" })
+  @ApiResponse({ status: 200, description: "Refund processed successfully" })
+  refundPayment(
+    @common.Param("bookingId") bookingId: string,
+    @CurrentUser() user: { id: string; role: UserRole } | undefined,
+  ) {
+    if (!user) throw new common.UnauthorizedException();
+    return this.paymentsService.refundPayment(bookingId, user.id, user.role);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto) {
-    return this.paymentsService.update(+id, updatePaymentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.paymentsService.remove(+id);
+  @common.Get("booking/:bookingId")
+  @common.UseGuards(AuthGuard("jwt"))
+  @ApiOperation({ summary: "Get payment by booking ID" })
+  getPaymentByBookingId(@common.Param("bookingId") bookingId: string) {
+    return this.paymentsService.getPaymentByBookingId(bookingId);
   }
 }

@@ -8,3 +8,10 @@ export enum BookingStatus {
   CONFIRMED,
   CANCELLED,
 }
+
+export enum PaymentStatus {
+  PENDING,
+  SUCCESS,
+  FAILED,
+  REFUNDED,
+}

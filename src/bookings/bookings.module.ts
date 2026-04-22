@@ -14,6 +14,8 @@ import { ServiceRepository } from "src/service/service.repository";
 import { PrismaServiceRepository } from "src/service/prisma-services.repository";
 import { AvailabilityRepository } from "src/availability/availability.repository";
 import { PrismaAvailabilityRepository } from "src/availability/prisma-availability.repository";
+import { PaymentRepository } from "src/payments/payment.repository";
+import { PrismaPaymentRepository } from "src/payments/prisma-payment.repository";
 
 @Module({
   controllers: [BookingsController],
@@ -38,6 +40,10 @@ import { PrismaAvailabilityRepository } from "src/availability/prisma-availabili
     {
       provide: AvailabilityRepository,
       useClass: PrismaAvailabilityRepository,
+    },
+    {
+      provide: PaymentRepository,
+      useClass: PrismaPaymentRepository,
     },
   ],
   imports: [PrismaModule, UsersModule, JwtModule],

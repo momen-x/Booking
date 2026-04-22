@@ -14,6 +14,7 @@ import { AvailabilityRepository } from "src/availability/availability.repository
 import { BookingStatus } from "utils/enums";
 import { UserRole } from "@prisma/client";
 import { DateTime } from "luxon";
+import { PaymentRepository } from "src/payments/payment.repository";
 
 const zone = "Asia/Gaza";
 @Injectable()
@@ -24,6 +25,7 @@ export class BookingsService {
     private providerProfileRepo: ProviderProfileRepository,
     private serviceRepo: ServiceRepository,
     private availabilityRepo: AvailabilityRepository,
+    private paymentRepo: PaymentRepository,
   ) {}
 
   async create(userId: string, createBookingDto: CreateBookingDto) {
@@ -116,12 +118,12 @@ export class BookingsService {
     if (status === BookingStatus.CONFIRMED) {
       // Must have a successful payment before confirming
       //toDo remove the comment on the next code:
-      // const payment = await this.paymentRepo.findByBookingId(id);
-      // if (!payment || payment.status !== PaymentStatus.SUCCESS) {
-      //   throw new BadRequestException(
-      //     "Booking cannot be confirmed without a successful payment",
-      //   );
-      // }
+      const payment = await this.paymentRepo.findByBookingId(id);
+      if (!payment || payment.status !== "SUCCESS") {
+        throw new BadRequestException(
+          "Booking cannot be confirmed without a successful payment",
+        );
+      }
     }
 
     this.validateStatusTransition(currentStatus, status);
