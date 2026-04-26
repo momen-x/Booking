@@ -29,14 +29,8 @@ export class ProviderProfileController {
   create(
     @Body()
     createProviderProfileDto: CreateProviderProfileDto,
-    @AuthenticatedUser()
-    user: { id: string; email: string; role: UserRole },
   ) {
-    return this.providerProfileService.create(
-      user.id,
-      user.role,
-      createProviderProfileDto,
-    );
+    return this.providerProfileService.create(createProviderProfileDto);
   }
 
   @Get()

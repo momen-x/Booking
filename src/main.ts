@@ -7,6 +7,8 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import * as express from "express";
 import { join } from "path";
+import helmet from "helmet";
+import "./config/cloudinary.config";
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -15,12 +17,19 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, "..", "images"), {
     prefix: "/images",
   });
+  app.use(helmet());
+  app.enableCors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+  });
   app.setGlobalPrefix("api");
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
   const swagger = new DocumentBuilder()

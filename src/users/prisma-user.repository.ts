@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/infrastructure/prisma/prisma.service";
 import { UserRepository } from "./user.repository";
-import { User as user } from "@prisma/client";
+import { User as user, UserRole } from "@prisma/client";
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
@@ -38,5 +38,12 @@ export class PrismaUserRepository implements UserRepository {
       where: { id },
     });
     return deleteAccount;
+  }
+  async updateUserRole(id: string, role: UserRole) {
+    const updateUserRole = await this.prisma.user.update({
+      where: { id },
+      data: { role },
+    });
+    return updateUserRole;
   }
 }

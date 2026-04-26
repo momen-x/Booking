@@ -11,6 +11,7 @@ import { ProviderProfileRepository } from "src/provider-profile/provider-profile
 import { diskStorage } from "multer";
 import { MulterModule } from "@nestjs/platform-express";
 import { join, extname } from "path";
+import { CloudinaryService } from "src/config/cloudinary.service";
 
 @Module({
   controllers: [ServiceController],
@@ -24,6 +25,7 @@ import { join, extname } from "path";
       provide: ProviderProfileRepository,
       useClass: PrismaProviderProfileRepository,
     },
+    CloudinaryService,
   ],
   imports: [
     PrismaModule,
@@ -47,7 +49,7 @@ import { join, extname } from "path";
         }
         cb(null, true);
       },
-      limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     }),
   ],
 })

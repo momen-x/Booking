@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/infrastructure/prisma/prisma.service";
 import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
 import { ProviderProfile } from "./entities/provider-profile.entity";
@@ -12,12 +12,6 @@ export class PrismaProviderProfileRepository implements ProviderProfileRepositor
     data: CreateProviderProfileDto,
   ): Promise<ProviderProfile> {
     const { userId, businessName, description, location } = data;
-    const isExistUser = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!isExistUser) {
-      throw new NotFoundException("User not found");
-    }
     const createProviderProfile = {
       userId,
       businessName,

@@ -7,26 +7,20 @@ import {
   Delete,
   Put,
   UseGuards,
-  UseInterceptors,
   UploadedFiles,
-  BadRequestException,
+  UseInterceptors,
 } from "@nestjs/common";
 import { ServiceAppService } from "./service.service";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
 import { AuthenticatedUser } from "src/users/decorator/authenticated-user.decorator";
 import { UserRole } from "@prisma/client";
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiResponse,
-} from "@nestjs/swagger";
+import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { Roles } from "src/users/decorator/user-role.decorator";
 import { AuthGuard } from "@nestjs/passport";
 import { AuthRolesGuard } from "src/users/role.guard";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { ServicesImagesUploadDto } from "./dto/upload-service-images.dto";
+import multer from "multer";
 
 @Controller("services")
 export class ServiceController {
@@ -42,17 +36,34 @@ export class ServiceController {
   @ApiOperation({ summary: "Create a new service" })
   @Roles(UserRole.ADMIN, UserRole.PROVIDER)
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  @UseInterceptors(
+    FilesInterceptor("images", 3, {
+      storage: multer.memoryStorage(),
+    }),
+  )
   create(
     @Body() createServiceDto: CreateServiceDto,
     @AuthenticatedUser()
     user: { id: string; email: string; role: UserRole },
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.serviceService.create(user.id, user.role, createServiceDto);
+    return this.serviceService.create(
+      user.id,
+      user.role,
+      createServiceDto,
+      files,
+    );
+  }
+  @Get()
+  @ApiResponse({ status: 200, description: "Get all services" })
+  @ApiOperation({ summary: "Get all services" })
+  findAll() {
+    return this.serviceService.findAll();
   }
 
   @Get("provider/:providerId")
-  @ApiResponse({ status: 200, description: "Get all services" })
-  @ApiOperation({ summary: "Get all services" })
+  @ApiResponse({ status: 200, description: "Get all provider's services" })
+  @ApiOperation({ summary: "Get all provider's services" })
   findServicesByProvider(@Param("providerId") providerId: string) {
     return this.serviceService.getServicesByProvider(providerId);
   }
@@ -69,13 +80,21 @@ export class ServiceController {
   @ApiOperation({ summary: "Update a service" })
   @Roles(UserRole.ADMIN, UserRole.PROVIDER)
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  @UseInterceptors(FilesInterceptor("newImages", 3))
   update(
     @Param("id") id: string,
     @Body() updateServiceDto: UpdateServiceDto,
     @AuthenticatedUser()
     user: { id: string; email: string; role: UserRole },
+    @UploadedFiles() newFiles: Express.Multer.File[],
   ) {
-    return this.serviceService.update(id, user.id, user.role, updateServiceDto);
+    return this.serviceService.update(
+      id,
+      user.id,
+      user.role,
+      updateServiceDto,
+      newFiles,
+    );
   }
 
   @Delete(":id")
@@ -89,83 +108,5 @@ export class ServiceController {
     user: { id: string; email: string; role: UserRole },
   ) {
     return this.serviceService.remove(id, user.role, user.id);
-  }
-  @Post(":id/images")
-  @UseInterceptors(FilesInterceptor("service-images", 3))
-  @ApiResponse({ status: 201, description: "Images uploaded successfully" })
-  @ApiOperation({ summary: "Upload service images" })
-  @Roles(UserRole.ADMIN, UserRole.PROVIDER)
-  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  @ApiConsumes("multipart/form-data")
-  @ApiBody({ type: ServicesImagesUploadDto, description: "service images" })
-  uploadImages(
-    @Param("id") serviceId: string,
-    @UploadedFiles() files: Express.Multer.File[],
-    @AuthenticatedUser() user: { id: string; role: UserRole },
-  ) {
-    if (!files || files.length === 0)
-      throw new BadRequestException("No files uploaded");
-    return this.serviceService.uploadServiceImages(
-      serviceId,
-      user.id,
-      user.role,
-      files,
-    );
-  }
-
-  // service.controller.ts
-
-  @Delete(":id/images")
-  @ApiOperation({ summary: "Delete a service image" })
-  @ApiResponse({ status: 200, description: "Image deleted successfully" })
-  @ApiBody({ schema: { properties: { imageUrl: { type: "string" } } } })
-  @Roles(UserRole.ADMIN, UserRole.PROVIDER)
-  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  removeImage(
-    @Param("id") serviceId: string,
-    @Body("imageUrl") imageUrl: string,
-    @AuthenticatedUser() user: { id: string; role: UserRole },
-  ) {
-    if (!imageUrl) throw new BadRequestException("imageUrl is required");
-    return this.serviceService.removeServiceImage(
-      serviceId,
-      imageUrl,
-      user.id,
-      user.role,
-    );
-  }
-
-  @Put(":id/images")
-  @UseInterceptors(FilesInterceptor("service-image", 1))
-  @ApiOperation({ summary: "Replace a service image" })
-  @ApiResponse({ status: 200, description: "Image replaced successfully" })
-  @ApiConsumes("multipart/form-data")
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        file: { type: "string", format: "binary" },
-        oldImageUrl: { type: "string" },
-      },
-    },
-  })
-  @Roles(UserRole.ADMIN, UserRole.PROVIDER)
-  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  replaceImage(
-    @Param("id") serviceId: string,
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body("oldImageUrl") oldImageUrl: string,
-    @AuthenticatedUser() user: { id: string; role: UserRole },
-  ) {
-    if (!files || files.length === 0)
-      throw new BadRequestException("No file uploaded");
-    if (!oldImageUrl) throw new BadRequestException("oldImageUrl is required");
-    return this.serviceService.updateServiceImage(
-      serviceId,
-      oldImageUrl,
-      files[0],
-      user.id,
-      user.role,
-    );
   }
 }

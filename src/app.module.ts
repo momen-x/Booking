@@ -7,9 +7,9 @@ import { UsersModule } from "./users/users.module";
 import { AvailabilityModule } from "./availability/availability.module";
 import { BookingsModule } from "./bookings/bookings.module";
 import { ProviderProfileModule } from "./provider-profile/provider-profile.module";
-import { ReviewModule } from "./review/review.module";
 import { ServiceModule } from "./service/service.module";
 import { PaymentsModule } from "./payments/payments.module";
+import { ProviderRequestModule } from "./provider-request/provider-request.module";
 
 @Module({
   controllers: [AppController],
@@ -21,9 +21,9 @@ import { PaymentsModule } from "./payments/payments.module";
     AvailabilityModule,
     BookingsModule,
     ProviderProfileModule,
-    ReviewModule,
     ServiceModule,
     PaymentsModule,
+    ProviderRequestModule,
   ],
 })
 export class AppModule {}

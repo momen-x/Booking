@@ -7,93 +7,127 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  username  String
-  password  String
-  role      UserRole @default(USER)
-  createdAt DateTime @default(now())
-
-  provider ProviderProfile?
-  bookings Booking[]
+  id              String            @id @default(uuid())
+  email           String            @unique
+  username        String
+  password        String
+  role            UserRole          @default(USER)
+  bookings        Booking[]
+  provider        ProviderProfile?
+  providerRequest ProviderRequest[]
+  notifications   Notification[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now()) @updatedAt
 }
 
 model ProviderProfile {
-  id           String  @id @default(uuid())
-  userId       String  @unique
+  id           String         @id @default(uuid())
+  userId       String         @unique
   businessName String
   description  String?
   location     String?
-  isActive     Boolean @default(true)
-
-  user         User           @relation(fields: [userId], references: [id])
-  services     Service[]
+  isActive     Boolean        @default(true)
   availability Availability[]
   bookings     Booking[]
-
-  createdAt DateTime @default(now())
+  user         User           @relation(fields: [userId], references: [id])
+  services     Service[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now()) @updatedAt
 }
 
 model Service {
-  id         String   @id @default(uuid())
+  id         String          @id @default(uuid())
   providerId String
   name       String
   duration   Int
   price      Float
   images     String[]
-
-  provider ProviderProfile @relation(fields: [providerId], references: [id])
-  bookings Booking[]
-
-  createdAt DateTime @default(now())
+  bookings   Booking[]
+  provider   ProviderProfile @relation(fields: [providerId], references: [id])
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @default(now()) @updatedAt
 }
 
 model Availability {
-  id         String @id @default(uuid())
+  id         String          @id @default(uuid())
   providerId String
   dayOfWeek  Int
   startTime  Int
   endTime    Int
-
-  provider ProviderProfile @relation(fields: [providerId], references: [id])
+  provider   ProviderProfile @relation(fields: [providerId], references: [id])
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @default(now()) @updatedAt
 
   @@index([providerId, dayOfWeek])
 }
 
 model Booking {
-  id         String @id @default(uuid())
+  id         String          @id @default(uuid())
   userId     String
   providerId String
   serviceId  String
-
-  date      DateTime
-  startTime DateTime
-  endTime   DateTime
-  payment   Payment[]
-  status    BookingStatus @default(PENDING)
-  deletedAt DateTime? // Soft delete field
-
-  user     User            @relation(fields: [userId], references: [id])
-  provider ProviderProfile @relation(fields: [providerId], references: [id])
-  service  Service         @relation(fields: [serviceId], references: [id])
-
-  createdAt DateTime @default(now())
+  date       DateTime
+  startTime  DateTime
+  endTime    DateTime
+  status     BookingStatus   @default(PENDING)
+  provider   ProviderProfile @relation(fields: [providerId], references: [id])
+  service    Service         @relation(fields: [serviceId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+  payment    Payment[]
+  deletedAt  DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @default(now()) @updatedAt
 
   @@index([providerId, date])
   @@index([userId])
-  @@index([deletedAt]) // Index for soft-deleted filtering
+  @@index([deletedAt])
 }
 
 model Payment {
-  id        String @id @default(uuid())
-  bookingId String
-
-  amount   Float
-  status   PaymentStatus
-  provider String // stripe, paypal...
+  id              String        @id @default(uuid())
+  bookingId       String
+  amount          Float
+  status          PaymentStatus
+  provider        String
   paymentIntentId String
-  booking   Booking  @relation(fields: [bookingId], references: [id])
+  booking         Booking       @relation(fields: [bookingId], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now()) @updatedAt
+}
+
+model ProviderRequest {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  status RequestStatus @default(PENDING)
+
+  provideName   String
+  IDNumber      String
+  fullName      String
+  birthday      DateTime
+  nationality   String
+  location      String
+  IDImage       String
+  selfieIDImage String
+  Portfolio     String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+}
+
+model Notification {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  title   String
+  message String
+
+  type   NotificationType
+  isRead Boolean          @default(false)
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 enum UserRole {
@@ -113,4 +147,17 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   REFUNDED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  PROVIDER_REQUEST
+  BOOKING
+  PAYMENT
+  SYSTEM
 }

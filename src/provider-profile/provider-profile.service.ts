@@ -8,26 +8,28 @@ import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
 import { UpdateProviderProfileDto } from "./dto/update-provider-profile.dto";
 import { ProviderProfileRepository } from "./provider-profile.repository";
 import { UserRole } from "@prisma/client";
+import { UserRepository } from "src/users/user.repository";
 
 @Injectable()
 export class ProviderProfileService {
-  constructor(private providerProfileRepo: ProviderProfileRepository) {}
+  constructor(
+    private providerProfileRepo: ProviderProfileRepository,
+    private userRepo: UserRepository,
+  ) {}
 
-  async create(
-    userId: string,
-    role: UserRole,
-    createProviderProfileDto: CreateProviderProfileDto,
-  ) {
-    if (role === UserRole.PROVIDER) {
+  async create(createProviderProfileDto: CreateProviderProfileDto) {
+    const user = await this.userRepo.findById(createProviderProfileDto.userId);
+    if (!user) throw new NotFoundException("User not found");
+    if (user.role === "PROVIDER")
       throw new BadRequestException("User is already a provider");
+    if (user.role !== "ADMIN") {
+      await this.userRepo.updateUserRole(user.id, UserRole.PROVIDER);
     }
-    if (role === UserRole.ADMIN) {
-      return await this.providerProfileRepo.createProvider(
-        createProviderProfileDto,
-      );
-    }
-    throw new BadRequestException("Unauthorized to create provider profile");
+    return await this.providerProfileRepo.createProvider(
+      createProviderProfileDto,
+    );
   }
+
   async findAll() {
     return await this.providerProfileRepo.getAllProviders();
   }

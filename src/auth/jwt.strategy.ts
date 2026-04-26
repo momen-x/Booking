@@ -25,8 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
           const cookieToken = (req.cookies as
             | Record<string, string>
             | undefined)
-            ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              (req.cookies["access_token"] as string | undefined)
+            ? (req.cookies["access_token"] as string | undefined)
             : undefined;
           if (cookieToken) return cookieToken;
 
@@ -62,8 +61,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 
   async validate(req: Request, payload: JWTPayloadType) {
     const user = await this.prisma.user.findUnique({
-      where: { id: String(payload.sub) }, // convert number to string
-      select: { id: true, email: true }, // remove role if not in schema
+      where: { id: String(payload.sub) },
+      select: { id: true, email: true, role: true }, // Include role
     });
 
     if (!user) throw new UnauthorizedException("User no longer exists");
