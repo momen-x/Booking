@@ -42,6 +42,25 @@ export class AvailabilityController {
     );
   }
 
+  @Get()
+  @ApiResponse({
+    status: 200,
+    description: "Get all availability slots",
+  })
+  @ApiOperation({ summary: "Get all availability slots" })
+  @Roles(UserRole.ADMIN, UserRole.PROVIDER)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  findAllByCurrentProvider(
+    @AuthenticatedUser()
+    user: {
+      id: string;
+      email: string;
+      role: UserRole;
+    },
+  ) {
+    return this.availabilityService.findAllByCurrentProvider(user.id);
+  }
+
   @Get("provider/:providerId")
   @ApiResponse({
     status: 200,

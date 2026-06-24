@@ -7,13 +7,21 @@ import {
   Delete,
   UseGuards,
   Put,
+  Post,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { UserRole } from "@prisma/client";
 import { AuthRolesGuard } from "./role.guard";
 import { Roles } from "./decorator/user-role.decorator";
 import { AuthGuard } from "@nestjs/passport";
-import { ApiOperation, ApiResponse } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+} from "@nestjs/swagger";
 import {
   UpdateUsername,
   UpdateUserPasswordByAdminDto,
@@ -21,12 +29,12 @@ import {
 } from "./dto/update-user.dto";
 import { CurrentUser } from "./decorator/current-user.decorator";
 import { AuthenticatedUser } from "./decorator/authenticated-user.decorator";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { ImageUploadDto } from "./dto/upload-user.dto";
 
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  //todo 1-check if the role, guard  and the decorator @CurrentUser   : decrypt the jwt cipher and make one logic
 
   @Get()
   @ApiResponse({ status: 200, description: "get all users" })
@@ -51,20 +59,6 @@ export class UsersController {
     return await this.usersService.findOneById(user.id);
   }
 
-  @Get(":id")
-  @ApiResponse({ status: 200, description: "get user by ID" })
-  @ApiOperation({ summary: "get user by ID" })
-  @Roles(UserRole.ADMIN)
-  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  findOne(@Param("id") id: string) {
-    return this.usersService.findOneById(id);
-  }
-  /**
-   * @route PUT ~/api/users/update-username
-   * @description update user username by the user himself
-   * @returns user data
-   * @access private just the user himself can update own username
-   */
   @Put("update-username")
   @ApiResponse({ status: 200, description: "username updated successfully" })
   @ApiOperation({ summary: "update user username" })
@@ -75,6 +69,88 @@ export class UsersController {
     @Body() dto: UpdateUsername,
   ) {
     return this.usersService.updateUsername(user?.id ?? "", dto.username);
+  }
+
+  @Put("update-password")
+  @ApiResponse({ status: 200, description: "password updated successfully" })
+  @ApiOperation({ summary: "update user password" })
+  @Roles(UserRole.ADMIN, UserRole.USER, UserRole.PROVIDER)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  updatePassword(
+    @CurrentUser()
+    user: { id: string; email?: string } | undefined,
+    @Body() updateUserPasswordDto: UpdateUserPasswordDto,
+  ) {
+    return this.usersService.updatePassword(
+      user?.id ?? "",
+      updateUserPasswordDto,
+    );
+  }
+
+  @Put("admin/password")
+  @ApiResponse({ status: 200, description: "password updated successfully" })
+  @ApiOperation({ summary: "update user password by admin" })
+  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  updatePasswordByAdmin(
+    @Body() updateUserPasswordDto: UpdateUserPasswordByAdminDto,
+  ) {
+    return this.usersService.updatePasswordByAdmin(updateUserPasswordDto);
+  }
+
+  @Delete()
+  @ApiResponse({
+    status: 200,
+    description: "user account deleted successfully",
+  })
+  @ApiOperation({ summary: "delete user account" })
+  @Roles(UserRole.ADMIN, UserRole.USER, UserRole.PROVIDER)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  remove(
+    @CurrentUser()
+    user: { id: string; email?: string } | undefined,
+  ) {
+    return this.usersService.remove(user?.id ?? "");
+  }
+
+  @Post("upload-image")
+  @ApiResponse({ status: 201, description: "upload user image" })
+  @ApiOperation({ summary: "upload user image" })
+  @UseGuards(AuthGuard("jwt"))
+  @UseInterceptors(FileInterceptor("user_image"))
+  @ApiConsumes("multipart/form-data")
+  @ApiBody({ type: ImageUploadDto, description: "profile image" })
+  async uploadUserImage(
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return await this.usersService.uploadUserImage(user.id, file);
+  }
+
+  @Delete("delete-image")
+  @ApiResponse({ status: 200, description: "delete user image" })
+  @ApiOperation({ summary: "delete user image" })
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  deleteUserImage(
+    @AuthenticatedUser()
+    user: {
+      id: string;
+      email: string;
+      role: UserRole;
+    },
+  ) {
+    return this.usersService.deleteUserImage(user.id);
+  }
+  //Admin section
+
+  @Get(":id")
+  @ApiResponse({ status: 200, description: "get user by ID" })
+  @ApiOperation({ summary: "get user by ID" })
+  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  findOne(@Param("id") id: string) {
+    return this.usersService.findOneById(id);
   }
   /**
    * @route PUT ~/api/users/:id/username
@@ -92,63 +168,6 @@ export class UsersController {
     @Body() dto: UpdateUsername,
   ) {
     return this.usersService.updateUsername(id, dto.username);
-  }
-  /**
-   * @route PUT ~/api/users/update-password
-   * @description update password user account by the user himself
-   * @returns user data
-   * @access private just the user himself can update own password account
-   */
-  @Put("update-password")
-  @ApiResponse({ status: 200, description: "password updated successfully" })
-  @ApiOperation({ summary: "update user password" })
-  @Roles(UserRole.ADMIN, UserRole.USER, UserRole.PROVIDER)
-  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  updatePassword(
-    @CurrentUser()
-    user: { id: string; email?: string } | undefined,
-    @Body() updateUserPasswordDto: UpdateUserPasswordDto,
-  ) {
-    return this.usersService.updatePassword(
-      user?.id ?? "",
-      updateUserPasswordDto,
-    );
-  }
-  /**
-   * @route PUT ~/api/users/admin/update-password
-   * @description update user password account by the admin
-   * @returns user data
-   * @access private just the user admin can update the user account by this route
-   */
-  @Put("admin/password")
-  @ApiResponse({ status: 200, description: "password updated successfully" })
-  @ApiOperation({ summary: "update user password by admin" })
-  @Roles(UserRole.ADMIN)
-  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  updatePasswordByAdmin(
-    @Body() updateUserPasswordDto: UpdateUserPasswordByAdminDto,
-  ) {
-    return this.usersService.updatePasswordByAdmin(updateUserPasswordDto);
-  }
-  /**
-   * @route DELETE ~/api/users
-   * @description delete user by the user himself
-   * @returns success message
-   * @access private just the user himself can delete own account
-   */
-  @Delete()
-  @ApiResponse({
-    status: 200,
-    description: "user account deleted successfully",
-  })
-  @ApiOperation({ summary: "delete user account" })
-  @Roles(UserRole.ADMIN, UserRole.USER, UserRole.PROVIDER)
-  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
-  remove(
-    @CurrentUser()
-    user: { id: string; email?: string } | undefined,
-  ) {
-    return this.usersService.remove(user?.id ?? "");
   }
   /**
    * @route DELETE ~/api/users/:id

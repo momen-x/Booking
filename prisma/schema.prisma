@@ -12,12 +12,13 @@ model User {
   username        String
   password        String
   role            UserRole          @default(USER)
-  bookings        Booking[]
-  provider        ProviderProfile?
-  providerRequest ProviderRequest[]
-  notifications   Notification[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @default(now()) @updatedAt
+  userImage       String?
+  bookings        Booking[]
+  notifications   Notification[]
+  provider        ProviderProfile?
+  providerRequest ProviderRequest[]
 }
 
 model ProviderProfile {
@@ -26,13 +27,14 @@ model ProviderProfile {
   businessName String
   description  String?
   location     String?
+  createdAt    DateTime       @default(now())
   isActive     Boolean        @default(true)
+  updatedAt    DateTime       @default(now()) @updatedAt
   availability Availability[]
   bookings     Booking[]
-  user         User           @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   services     Service[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @default(now()) @updatedAt
 }
 
 model Service {
@@ -41,11 +43,11 @@ model Service {
   name       String
   duration   Int
   price      Float
-  images     String[]
-  bookings   Booking[]
-  provider   ProviderProfile @relation(fields: [providerId], references: [id])
   createdAt  DateTime        @default(now())
+  images     String[]
   updatedAt  DateTime        @default(now()) @updatedAt
+  bookings   Booking[]
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
 }
 
 model Availability {
@@ -54,9 +56,10 @@ model Availability {
   dayOfWeek  Int
   startTime  Int
   endTime    Int
-  provider   ProviderProfile @relation(fields: [providerId], references: [id])
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @default(now()) @updatedAt
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
 
   @@index([providerId, dayOfWeek])
 }
@@ -70,17 +73,19 @@ model Booking {
   startTime  DateTime
   endTime    DateTime
   status     BookingStatus   @default(PENDING)
+  createdAt  DateTime        @default(now())
+  deletedAt  DateTime?
+  updatedAt  DateTime        @default(now()) @updatedAt
+  expiresAt  DateTime
   provider   ProviderProfile @relation(fields: [providerId], references: [id])
   service    Service         @relation(fields: [serviceId], references: [id])
   user       User            @relation(fields: [userId], references: [id])
   payment    Payment[]
-  deletedAt  DateTime?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @default(now()) @updatedAt
 
   @@index([providerId, date])
   @@index([userId])
   @@index([deletedAt])
+  @@index([status, expiresAt])
 }
 
 model Payment {
@@ -89,45 +94,42 @@ model Payment {
   amount          Float
   status          PaymentStatus
   provider        String
-  paymentIntentId String
-  booking         Booking       @relation(fields: [bookingId], references: [id])
   createdAt       DateTime      @default(now())
+  paymentIntentId String
   updatedAt       DateTime      @default(now()) @updatedAt
+  booking         Booking       @relation(fields: [bookingId], references: [id])
 }
 
 model ProviderRequest {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  status RequestStatus @default(PENDING)
-
-  provideName   String
-  IDNumber      String
-  fullName      String
-  birthday      DateTime
-  nationality   String
-  location      String
+  id            String        @id @default(uuid())
+  userId        String
+  status        RequestStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
   IDImage       String
+  IDNumber      String
+  birthday      DateTime
+  fullName      String
+  location      String
+  nationality   String
+  provideName   String
   selfieIDImage String
   Portfolio     String[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now()) @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
 }
 
 model Notification {
-  id     String @id @default(uuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @default(now()) @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title   String
-  message String
-
-  type   NotificationType
-  isRead Boolean          @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
 }
 
 enum UserRole {

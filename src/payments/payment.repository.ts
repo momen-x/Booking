@@ -3,12 +3,14 @@ import { Payment } from "@prisma/client";
 import { PaymentStatus } from "@prisma/client";
 
 export abstract class PaymentRepository {
-  abstract createPayment(data: {
-    bookingId: string;
-    amount: number;
-    provider: string;
-    paymentIntentId: string;
-  }): Promise<Payment>;
+  abstract createPayment(
+    bookingId: string,
+    amount: number,
+    data: {
+      provider: string;
+      paymentIntentId: string;
+    },
+  ): Promise<Payment>;
 
   abstract findByBookingId(bookingId: string): Promise<Payment | null>;
   abstract findByPaymentIntentId(

@@ -28,7 +28,7 @@ export class AuthController {
       res.cookie("access_token", result.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       });
     }
@@ -47,10 +47,18 @@ export class AuthController {
       res.cookie("access_token", result.access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       });
     }
+    return { success: true };
+  }
+  @HttpCode(HttpStatus.OK)
+  @Post("logout")
+  @ApiResponse({ status: 200, description: "logout user" })
+  @ApiOperation({ summary: "logout user" })
+  logout(@Res({ passthrough: true }) res: express.Response) {
+    res.clearCookie("access_token");
     return { success: true };
   }
 }

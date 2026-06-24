@@ -5,10 +5,14 @@ import {
 } from "@nestjs/common";
 import { NotificationsRepository } from "./notifications.repository";
 import { CreateNotificationDTO } from "./dto/create-notifications.dto";
+import { UserRepository } from "src/users/user.repository";
 
 @Injectable()
 export class NotificationService {
-  constructor(private readonly notificationRepo: NotificationsRepository) {}
+  constructor(
+    private readonly notificationRepo: NotificationsRepository,
+    private readonly userRepo: UserRepository,
+  ) {}
 
   findAll(userId: string) {
     return this.notificationRepo.findAllByUserId(userId);
@@ -33,8 +37,11 @@ export class NotificationService {
     return this.notificationRepo.updateManyByUserId(userId, { isRead: true });
   }
 
-  // Call this from other services (booking, provider request, etc.)
-  create(userId: string, dto: CreateNotificationDTO) {
-    return this.notificationRepo.create(userId, dto);
+  // this service will Called in the  other services (booking, provider request, etc.)
+  async create(userId: string, dto: CreateNotificationDTO) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException("User not found");
+    const updateNotification = await this.notificationRepo.create(userId, dto);
+    return updateNotification;
   }
 }

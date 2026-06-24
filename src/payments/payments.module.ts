@@ -11,6 +11,8 @@ import { BookingRepository } from "src/bookings/booking.repository";
 import { PrismaBookingRepository } from "src/bookings/prisma-booking.repository";
 import { ServiceRepository } from "src/service/service.repository";
 import { PrismaServiceRepository } from "src/service/prisma-services.repository";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
 
 @Module({
   imports: [PrismaModule, ConfigModule],
@@ -21,6 +23,11 @@ import { PrismaServiceRepository } from "src/service/prisma-services.repository"
     { provide: PaymentRepository, useClass: PrismaPaymentRepository },
     { provide: BookingRepository, useClass: PrismaBookingRepository },
     { provide: ServiceRepository, useClass: PrismaServiceRepository },
+    {
+      provide: NotificationsRepository,
+      useClass: PrismaNotificationsRepository,
+    },
   ],
+  exports: [StripeService, PaymentRepository],
 })
 export class PaymentsModule {}

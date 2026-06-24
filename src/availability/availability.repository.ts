@@ -4,6 +4,7 @@ import { Availability } from "./entities/availability.entity";
 
 export abstract class AvailabilityRepository {
   abstract createAvailability(
+    providerId: string,
     dto: CreateAvailabilityDto,
   ): Promise<Availability>;
   abstract findAvailabilitiesByProviderId(

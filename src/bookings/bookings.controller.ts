@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import { BookingsService } from "./bookings.service";
 import { updateBookingStatus } from "./dto/update-booking.dto";
@@ -16,7 +17,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { Roles } from "src/users/decorator/user-role.decorator";
 
-@Controller("bookings")
+@Controller("booking")
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
@@ -42,6 +43,14 @@ export class BookingsController {
     };
     return this.bookingsService.create(user.id, dto);
   }
+  // @Get("provider/:providerId")
+  // @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard("jwt"))
+  // @ApiResponse({ status: 200, description: "Get all bookings for a user" })
+  // @ApiOperation({ summary: "Get all bookings for a user" })
+  // findProviderBooking(@Param("providerId") providerId: string) {
+  //   return this.bookingsService.findAllByUserId(userId);
+  // }
 
   @Get("user/:userId")
   @Roles(UserRole.ADMIN)
@@ -59,21 +68,24 @@ export class BookingsController {
   findMyBookings(@AuthenticatedUser() user: { id: string; role: UserRole }) {
     return this.bookingsService.findAllByUserId(user.id);
   }
-  @Get("provider/:providerId")
+  @Roles(UserRole.PROVIDER)
+  @UseGuards(AuthGuard("jwt"))
+  @Get("current-provider")
   @ApiResponse({ status: 200, description: "Get all bookings for a provider" })
   @ApiOperation({ summary: "Get all bookings for a provider" })
   @UseGuards(AuthGuard("jwt"))
-  findByProviderId(
-    @Param("providerId") providerId: string,
-    @AuthenticatedUser() user: { id: string; role: UserRole },
-  ) {
-    return this.bookingsService.findAllByProviderId(
-      providerId,
-      user.id,
-      user.role,
-    );
+  findByProviderId(@AuthenticatedUser() user: { id: string; role: UserRole }) {
+    return this.bookingsService.findAllByProviderId(user.id, user.role);
   }
-
+  @UseGuards(AuthGuard("jwt"))
+  @Get()
+  getBookingTimeToDefinedProvider(
+    @Query("providerId") providerId: string,
+    @Query("date") date: Date,
+  ) {
+    // return `hi everyone the providerId is : ${providerId}, and the date is : ${date.toISOString()}`;
+    return this.bookingsService.findByProviderIdAndDay(providerId, date);
+  }
   @Get(":id")
   @ApiResponse({ status: 200, description: "Get booking by ID" })
   @ApiOperation({ summary: "Get booking by ID" })

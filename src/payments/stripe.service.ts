@@ -46,4 +46,7 @@ export class StripeService {
       webhookSecret,
     ) as unknown as { type: string; data: { object: Record<string, unknown> } };
   }
+  async cancelPaymentIntent(paymentIntentId: string) {
+    return this.stripe.paymentIntents.cancel(paymentIntentId);
+  }
 }

@@ -21,8 +21,11 @@ export class AvailabilityService {
     role: UserRole,
     createAvailabilityDto: CreateAvailabilityDto,
   ) {
+    const provider = await this.providerProfileRepository.findByUserId(userId);
+    if (!provider) throw new NotFoundException("the provider not found");
+
     const providerId = await this.checkProviderOwnership(
-      createAvailabilityDto.providerId,
+      provider.id,
       userId,
       role,
     );
@@ -32,9 +35,16 @@ export class AvailabilityService {
       createAvailabilityDto.startTime,
       createAvailabilityDto.endTime,
     );
-    return this.availabilityRepo.createAvailability(createAvailabilityDto);
+    return this.availabilityRepo.createAvailability(
+      provider.id,
+      createAvailabilityDto,
+    );
   }
-
+  async findAllByCurrentProvider(userId: string) {
+    const provider = await this.providerProfileRepository.findByUserId(userId);
+    if (!provider) throw new NotFoundException("the provider not found");
+    return this.availabilityRepo.findAvailabilitiesByProviderId(provider.id);
+  }
   async findAllByProvider(providerId: string) {
     const provider = await this.providerProfileRepository.findById(providerId);
     if (!provider) throw new NotFoundException("Provider not found");

@@ -5,14 +5,10 @@ export class User {
     public id: string,
     public email: string,
     public username: string,
+    public userImage: string | null,
     public password: string,
     public role: UserRole,
     public createdAt: Date,
+    public updatedAt: Date,
   ) {}
 }
-// export class UserDto {
-//   constructor(public username: string) {}
-// }
-// export class PasswordDto {
-//   constructor(public password: string) {}
-// }

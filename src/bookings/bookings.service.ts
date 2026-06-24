@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   NotFoundException,
@@ -15,8 +20,10 @@ import { BookingStatus } from "utils/enums";
 import { UserRole } from "@prisma/client";
 import { DateTime } from "luxon";
 import { PaymentRepository } from "src/payments/payment.repository";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
 
-const zone = "Asia/Gaza";
+// const zone = "Asia/Gaza";
 @Injectable()
 export class BookingsService {
   constructor(
@@ -26,81 +33,76 @@ export class BookingsService {
     private serviceRepo: ServiceRepository,
     private availabilityRepo: AvailabilityRepository,
     private paymentRepo: PaymentRepository,
+    private notificationRepo: NotificationsRepository,
   ) {}
 
   async create(userId: string, createBookingDto: CreateBookingDto) {
-    // 1. Verify user, provider, and service exist
-    await this.checkIfUserExist(userId);
-    const provider = await this.checkIfProviderExist(
-      createBookingDto.providerId,
-    );
-    if (!provider.isActive) {
-      throw new ConflictException("Provider is not available");
+    try {
+      await this.checkIfUserExist(userId);
+      const provider = await this.checkIfProviderExist(
+        createBookingDto.providerId,
+      );
+      if (!provider.isActive) {
+        throw new ConflictException("Provider is not available");
+      }
+      const service = await this.checkIfServiceExist(
+        createBookingDto.serviceId,
+      );
+
+      if (service.providerId !== createBookingDto.providerId) {
+        throw new ConflictException("Service does not belong to provider");
+      }
+      const endTime = new Date(createBookingDto.startTime);
+      endTime.setMinutes(endTime.getMinutes() + service.duration);
+
+      await this.checkProviderAvailability(
+        createBookingDto.providerId,
+        createBookingDto.date,
+        createBookingDto.startTime, // original, not UTC
+        endTime,
+      );
+      const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const booking = await this.bookingRepo.createBookingWithTransaction(
+        userId,
+        { ...createBookingDto },
+        endTime,
+        expiresAt,
+      );
+      const successCreateProviderMessage: CreateNotificationDTO = {
+        title: "Booking pending",
+        message: `you booking is pending paid for confirm your booking`,
+        type: "BOOKING",
+      };
+      await this.notificationRepo.create(userId, successCreateProviderMessage);
+      return booking;
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      throw error;
     }
-    const service = await this.checkIfServiceExist(createBookingDto.serviceId);
-
-    // 2. Service-Provider Validation (BEFORE calculations)
-    if (service.providerId !== createBookingDto.providerId) {
-      throw new ConflictException("Service does not belong to provider");
-    }
-
-    // 3. Calculate endTime from service duration if not provided
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const startTimeUTC = this.toUTC(createBookingDto.startTime, zone);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const endTimeUTC = this.toUTC(createBookingDto.endTime, zone);
-    // 4. Check provider availability for the requested day/tim
-    await this.checkProviderAvailability(
-      createBookingDto.providerId,
-      createBookingDto.date,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      startTimeUTC,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      endTimeUTC,
-    );
-
-    // 5. Create the booking with transaction (handles overlap check + creation atomically)
-    const bookingData = {
-      ...createBookingDto,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      startTime: startTimeUTC,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      endTime: endTimeUTC,
-    };
-
-    const booking = await this.bookingRepo.createBookingWithTransaction(
-      userId,
-      bookingData,
-    );
-    return booking;
   }
 
   async findAllByUserId(userId: string) {
     const user = await this.checkIfUserExist(userId);
+    const now = new Date(Date.now());
+    await this.bookingRepo.findExpiredPendingBookings(now);
     return this.bookingRepo.findBookingsByUserId(user.id);
   }
 
-  async findAllByProviderId(
-    providerId: string,
-    userId: string,
-    role: UserRole,
-  ) {
-    if (role !== UserRole.ADMIN && role !== UserRole.PROVIDER)
-      throw new UnauthorizedException("you can't to do this action");
-    if (role === UserRole.PROVIDER && userId !== providerId) {
+  async findAllByProviderId(userId: string, role: UserRole) {
+    if (role !== UserRole.ADMIN && role !== UserRole.PROVIDER) {
       throw new UnauthorizedException("you can't to do this action");
     }
-    const provider = await this.checkIfProviderExist(providerId);
+    const provider = await this.providerProfileRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException("Provider not found");
+    if (role === UserRole.PROVIDER && userId !== provider.userId) {
+      throw new UnauthorizedException("you can't to do this action");
+    }
     return this.bookingRepo.findBookingsByProviderId(provider.id);
   }
 
-  // async findAllByServiceId(serviceId: string) {
-  //   const service = await this.checkIfServiceExist(serviceId);
-  //   return this.bookingRepo.findBookingByServiceId(service.id);
-  // }
-  async findByProviderAndDay(serviceId: string, date: Date) {
+  async findByProviderIdAndDay(providerId: string, date: Date) {
     const booking = await this.bookingRepo.findByProviderAndDay(
-      serviceId,
+      providerId,
       date,
     );
     return booking;
@@ -117,7 +119,6 @@ export class BookingsService {
 
     if (status === BookingStatus.CONFIRMED) {
       // Must have a successful payment before confirming
-      //toDo remove the comment on the next code:
       const payment = await this.paymentRepo.findByBookingId(id);
       if (!payment || payment.status !== "SUCCESS") {
         throw new BadRequestException(
@@ -191,84 +192,72 @@ export class BookingsService {
   private async checkProviderAvailability(
     providerId: string,
     date: Date,
-    startTime: Date,
-    endTime: Date,
+    startTime: Date | string,
+    endTime: Date | string,
   ) {
-    // Get the day of week from the date (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-    const dayOfWeek = new Date(date).getDay();
+    try {
+      // Convert strings to Date objects if needed
+      const startDate =
+        typeof startTime === "string" ? new Date(startTime) : startTime;
+      const endDate = typeof endTime === "string" ? new Date(endTime) : endTime;
 
-    // Get the time in minutes since midnight
-    const startMinutes = this.getMinutesSinceMidnight(startTime);
-    const endMinutes = this.getMinutesSinceMidnight(endTime);
+      // Convert all times to Asia/Gaza timezone for consistency
+      const startInGaza = DateTime.fromJSDate(startDate, {
+        zone: "Asia/Gaza",
+      });
+      const endInGaza = DateTime.fromJSDate(endDate, { zone: "Asia/Gaza" });
 
-    // Check if provider has availability for this day and time
-    const availabilities =
-      await this.availabilityRepo.findAvailabilitiesByProviderId(providerId);
+      if (!startInGaza.isValid || !endInGaza.isValid) {
+        throw new BadRequestException(
+          `Invalid date/time format. startTime: ${startTime}, endTime: ${endTime}`,
+        );
+      }
 
-    const isAvailable = availabilities.some(
-      (availability) =>
-        availability.dayOfWeek === dayOfWeek &&
-        availability.startTime <= startMinutes &&
-        availability.endTime >= endMinutes,
-    );
+      const dayOfWeek = startInGaza.weekday === 7 ? 0 : startInGaza.weekday;
+      const startMinutes = startInGaza.hour * 60 + startInGaza.minute;
+      const endMinutes = endInGaza.hour * 60 + endInGaza.minute;
 
-    if (!isAvailable) {
-      throw new ConflictException(
-        "Provider is not available for the requested date and time",
+      const availabilities =
+        await this.availabilityRepo.findAvailabilitiesByProviderId(providerId);
+
+      const isAvailable = availabilities.some(
+        (availability) =>
+          availability.dayOfWeek === dayOfWeek &&
+          availability.startTime <= startMinutes &&
+          availability.endTime >= endMinutes,
       );
+
+      if (!isAvailable) {
+        const dayNames = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        const slotsForDay = availabilities.filter(
+          (a) => a.dayOfWeek === dayOfWeek,
+        );
+        const message =
+          slotsForDay.length === 0
+            ? `Provider has no availability slots on ${dayNames[dayOfWeek]}. Please contact the provider to add availability.`
+            : `Requested time is outside provider's available hours on ${dayNames[dayOfWeek]}. Available slots: ${slotsForDay
+                .map(
+                  (a) =>
+                    `${this.minutesToTime(a.startTime)} - ${this.minutesToTime(a.endTime)}`,
+                )
+                .join(", ")}`;
+
+        throw new ConflictException(message);
+      }
+    } catch (error) {
+      console.error("❌ Error in checkProviderAvailability:", error);
+      throw error;
     }
   }
 
-  // Note: Overlap check is now handled in the repository transaction
-  // This method is kept for reference but is no longer called
-  // private async checkForOverlappingConfirmedBookings(
-  //   providerId: string,
-  //   startTime: Date,
-  //   endTime: Date,
-  // ) {
-  //   const overlappingBookings =
-  //     await this.bookingRepo.findOverlappingConfirmedBookings(
-  //       providerId,
-  //       startTime,
-  //       endTime,
-  //     );
-
-  //   if (overlappingBookings.length > 0) {
-  //     throw new ConflictException(
-  //       "Time slot is already booked with a confirmed booking",
-  //     );
-  //   }
-  //   if (startTime >= endTime) {
-  //     throw new BadRequestException("Invalid time range");
-  //   }
-  // }
-
-  // private validateStatusTransition(
-  //   currentStatus: BookingStatus,
-  //   newStatus: BookingStatus,
-  // ) {
-  //   // Status flow: PENDING → CONFIRMED / CANCELLED
-  //   if (currentStatus === BookingStatus.PENDING) {
-  //     if (
-  //       newStatus !== BookingStatus.CONFIRMED &&
-  //       newStatus !== BookingStatus.CANCELLED
-  //     ) {
-  //       throw new BadRequestException(
-  //         `Cannot transition from ${currentStatus} to ${newStatus}`,
-  //       );
-  //     }
-  //   } else if (currentStatus === BookingStatus.CONFIRMED) {
-  //     // Once confirmed, status cannot be changed (awaiting payment/completion)
-  //     throw new BadRequestException(
-  //       "Cannot update status of a confirmed booking. Status stays PENDING until payment confirmation.",
-  //     );
-  //   } else if (currentStatus === BookingStatus.CANCELLED) {
-  //     throw new BadRequestException(
-  //       "Cannot update status of a cancelled booking",
-  //     );
-  //   }
-  // }
-  //todo understand this code
   private validateStatusTransition(
     current: BookingStatus,
     next: BookingStatus,
@@ -290,11 +279,17 @@ export class BookingsService {
   }
 
   private getMinutesSinceMidnight(date: Date): number {
-    const d = new Date(date);
-    return d.getHours() * 60 + d.getMinutes();
+    const local = DateTime.fromJSDate(date).setZone("Asia/Gaza");
+    return local.hour * 60 + local.minute;
   }
+
+  private minutesToTime(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  }
+
   private toUTC(date: Date, timezone: string) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     return DateTime.fromJSDate(date, { zone: timezone }).toUTC().toJSDate();
   }
 }

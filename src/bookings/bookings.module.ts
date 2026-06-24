@@ -16,11 +16,16 @@ import { AvailabilityRepository } from "src/availability/availability.repository
 import { PrismaAvailabilityRepository } from "src/availability/prisma-availability.repository";
 import { PaymentRepository } from "src/payments/payment.repository";
 import { PrismaPaymentRepository } from "src/payments/prisma-payment.repository";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
+import { BookingExpirationCron } from "./booking.expiration.corn";
+import { PaymentsModule } from "src/payments/payments.module";
 
 @Module({
   controllers: [BookingsController],
   providers: [
     BookingsService,
+    BookingExpirationCron,
     {
       provide: BookingRepository,
       useClass: PrismaBookingRepository,
@@ -45,7 +50,11 @@ import { PrismaPaymentRepository } from "src/payments/prisma-payment.repository"
       provide: PaymentRepository,
       useClass: PrismaPaymentRepository,
     },
+    {
+      provide: NotificationsRepository,
+      useClass: PrismaNotificationsRepository,
+    },
   ],
-  imports: [PrismaModule, UsersModule, JwtModule],
+  imports: [PrismaModule, UsersModule, JwtModule, PaymentsModule],
 })
 export class BookingsModule {}

@@ -14,9 +14,6 @@ import { Transform } from "class-transformer";
 
 export class CreateServiceDto {
   @IsNotEmpty()
-  @ApiProperty({ description: "ID of the provider offering the service" })
-  providerId!: string;
-
   @Length(3, 255)
   @IsNotEmpty()
   @ApiProperty({ description: "Name of the service" })

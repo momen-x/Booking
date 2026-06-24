@@ -5,10 +5,14 @@ export abstract class BookingRepository {
   abstract createBookingWithTransaction(
     userId: string,
     dto: CreateBookingDto,
+    endTime: Date,
+    expiresAt: Date,
   ): Promise<Booking>;
   abstract createBooking(
     userId: string,
     dto: CreateBookingDto,
+    endTime: Date,
+    expiresAt: Date,
   ): Promise<Booking>;
   abstract findBookingsByUserId(userId: string): Promise<Booking[]>;
   abstract findBookingsByProviderId(providerId: string): Promise<Booking[]>;
@@ -16,7 +20,7 @@ export abstract class BookingRepository {
   abstract findByProviderAndDay(
     serviceId: string,
     date: Date,
-  ): Promise<Booking | null>;
+  ): Promise<Booking[] | null>;
   abstract findBookingById(id: string): Promise<Booking | null>;
   abstract updateBookingStatus(id: string, status: string): Promise<Booking>;
   abstract cancelBooking(id: string): Promise<Booking>;
@@ -25,4 +29,6 @@ export abstract class BookingRepository {
     startTime: Date,
     endTime: Date,
   ): Promise<Booking[]>;
+  abstract findExpiredPendingBookings(now: Date): Promise<Booking[]>;
+  abstract cancelBookings(ids: string[]): Promise<void>;
 }

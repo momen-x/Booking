@@ -7,5 +7,6 @@ export class ProviderProfile {
     public description: string | null,
     public location: string | null,
     public createdAt: Date,
+    public updatedAt: Date,
   ) {}
 }

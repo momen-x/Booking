@@ -10,6 +10,9 @@ import { ServiceRepository } from "./service.repository";
 import { UserRole } from "@prisma/client";
 import { ProviderProfileRepository } from "../provider-profile/provider-profile.repository";
 import { CloudinaryService } from "src/config/cloudinary.service";
+import { UserRepository } from "src/users/user.repository";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
 
 @Injectable()
 export class ServiceAppService {
@@ -17,6 +20,8 @@ export class ServiceAppService {
     private serviceRepo: ServiceRepository,
     private providerProfileRepository: ProviderProfileRepository,
     private cloudinaryService: CloudinaryService,
+    private userRepo: UserRepository,
+    private notificationRepo: NotificationsRepository,
   ) {}
   async create(
     userId: string,
@@ -24,7 +29,9 @@ export class ServiceAppService {
     dto: CreateServiceDto,
     files?: Express.Multer.File[],
   ) {
-    await this.checkProviderOwnership(dto.providerId, userId, role);
+    const provider = await this.providerProfileRepository.findByUserId(userId);
+    if (!provider) throw new NotFoundException("Provider not found");
+    await this.checkProviderOwnership(provider.id, userId, role);
 
     // Upload images to Cloudinary if provided
     let imageUrls: string[] = [];
@@ -38,11 +45,23 @@ export class ServiceAppService {
       );
       imageUrls = uploadedImages.map((img) => img.url);
     }
-
-    return await this.serviceRepo.createService(dto, imageUrls);
+    const successAddServiceMessage: CreateNotificationDTO = {
+      title: "Add new service",
+      message: "you add new service successfully",
+      type: "SYSTEM",
+    };
+    await this.notificationRepo.create(userId, successAddServiceMessage);
+    return await this.serviceRepo.createService(provider.id, dto, imageUrls);
   }
 
-  async getServicesByProvider(providerId: string) {
+  async getServicesProviderByUserId(userId: string) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException("Provider profile not found");
+    if (user.role !== UserRole.PROVIDER)
+      throw new BadRequestException("Provider profile not found");
+    return await this.serviceRepo.findServicesByUserId(user.id);
+  }
+  async getServicesByProviderId(providerId: string) {
     const provider = await this.providerProfileRepository.findById(providerId);
     if (!provider) throw new NotFoundException("Provider profile not found");
     return await this.serviceRepo.findServicesByProviderId(providerId);
@@ -120,6 +139,10 @@ export class ServiceAppService {
     await this.serviceRepo.deleteService(id);
     return { message: "Service removed successfully" };
   }
+  // async deleteOrphanServices() {
+  //   const deleteUnUsedService = await this.serviceRepo.deleteOrphanServices();
+  //   return { delete: true };
+  // }
 
   private async checkProviderOwnership(
     providerId: string,

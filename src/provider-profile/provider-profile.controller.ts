@@ -17,7 +17,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { AuthenticatedUser } from "src/users/decorator/authenticated-user.decorator";
 import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
 
-@Controller("provider-profile")
+@Controller("providers")
 export class ProviderProfileController {
   constructor(
     private readonly providerProfileService: ProviderProfileService,
@@ -37,14 +37,40 @@ export class ProviderProfileController {
   findAll() {
     return this.providerProfileService.findAll();
   }
-
+  @Get("current-provider")
+  @Roles(UserRole.PROVIDER)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  findCurrentProvider(
+    @AuthenticatedUser()
+    user: {
+      id: string;
+      email: string;
+      role: UserRole;
+    },
+  ) {
+    return this.providerProfileService.findProviderByUserId(user.role, user.id);
+  }
+  @Put()
+  @Roles(UserRole.PROVIDER)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  updateProviderData(
+    @Body() updateProviderProfileDto: UpdateProviderProfileDto,
+    @AuthenticatedUser()
+    user: { id: string; email: string; role: UserRole },
+  ) {
+    return this.providerProfileService.updateByCurrentProvider(
+      user.id,
+      user.role,
+      updateProviderProfileDto,
+    );
+  }
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.providerProfileService.findOne(id);
   }
 
   @Put(":id")
-  @Roles(UserRole.PROVIDER, UserRole.ADMIN)
+  @Roles(UserRole.ADMIN)
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
   update(
     @Param("id") id: string,

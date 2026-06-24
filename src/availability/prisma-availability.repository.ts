@@ -10,40 +10,43 @@ import { Availability } from "./entities/availability.entity";
 @Injectable()
 export class PrismaAvailabilityRepository implements AvailabilityRepository {
   constructor(private prisma: PrismaService) {}
-  async createAvailability(dto: CreateAvailabilityDto): Promise<Availability> {
-    const data = await this.prisma.availability.create({
+  async createAvailability(
+    providerId: string,
+    dto: CreateAvailabilityDto,
+  ): Promise<Availability> {
+    const availability = await this.prisma.availability.create({
       data: {
-        providerId: dto.providerId,
+        providerId: providerId,
         dayOfWeek: dto.dayOfWeek,
         startTime: dto.startTime,
         endTime: dto.endTime,
       },
     });
-    return this.toDomain(data);
+    return availability;
   }
   async findAvailabilitiesByProviderId(
     providerId: string,
   ): Promise<Availability[]> {
-    const data = await this.prisma.availability.findMany({
+    const availability = await this.prisma.availability.findMany({
       where: {
         providerId: providerId,
       },
     });
-    return data.map((item) => this.toDomain(item));
+    return availability;
   }
   async findAvailabilityById(id: string): Promise<Availability | null> {
-    const data = await this.prisma.availability.findUnique({
+    const availabilities = await this.prisma.availability.findUnique({
       where: {
         id: id,
       },
     });
-    return data ? this.toDomain(data) : null;
+    return availabilities;
   }
   async updateAvailability(
     id: string,
     updatedAvailability: UpdateAvailabilityDto,
   ): Promise<Availability> {
-    const data = await this.prisma.availability.update({
+    const updateAvailability = await this.prisma.availability.update({
       where: {
         id: id,
       },
@@ -53,15 +56,15 @@ export class PrismaAvailabilityRepository implements AvailabilityRepository {
         endTime: updatedAvailability.endTime,
       },
     });
-    return this.toDomain(data);
+    return updateAvailability;
   }
   async deleteAvailability(id: string): Promise<Availability> {
-    const data = await this.prisma.availability.delete({
+    const availability = await this.prisma.availability.delete({
       where: {
         id: id,
       },
     });
-    return this.toDomain(data);
+    return availability;
   }
 
   async findOverlappingAvailabilities(
@@ -90,19 +93,5 @@ export class PrismaAvailabilityRepository implements AvailabilityRepository {
         ],
       },
     });
-  }
-  private toDomain(data: any): Availability {
-    return new Availability(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      data.id,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      data.providerId,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      data.dayOfWeek,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      data.startTime,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      data.endTime,
-    );
   }
 }

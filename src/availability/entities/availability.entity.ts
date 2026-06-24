@@ -5,8 +5,11 @@ export class Availability {
     public dayOfWeek: number, //(0-6)
     public startTime: number,
     public endTime: number,
+    public createdAt: Date,
+    public updatedAt: Date,
   ) {}
 }
+
 export class ReturnAvailability {
   constructor(
     public start: Date,

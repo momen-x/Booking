@@ -8,5 +8,6 @@ export class Payment {
     public provider: string,
     public bookingId: string,
     public createdAt: Date,
+    public updatedAt: Date,
   ) {}
 }

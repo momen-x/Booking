@@ -10,11 +10,14 @@ import { ProviderProfileModule } from "./provider-profile/provider-profile.modul
 import { ServiceModule } from "./service/service.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { ProviderRequestModule } from "./provider-request/provider-request.module";
+import { NotificationModule } from "./notifications/notifications.module";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   controllers: [AppController],
   providers: [AppService],
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     UsersModule,
@@ -24,6 +27,7 @@ import { ProviderRequestModule } from "./provider-request/provider-request.modul
     ServiceModule,
     PaymentsModule,
     ProviderRequestModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

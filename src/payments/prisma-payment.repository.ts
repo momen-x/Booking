@@ -8,16 +8,18 @@ import { Payment, PaymentStatus } from "@prisma/client";
 export class PrismaPaymentRepository implements PaymentRepository {
   constructor(private prisma: PrismaService) {}
 
-  async createPayment(data: {
-    bookingId: string;
-    amount: number;
-    provider: string;
-    paymentIntentId: string;
-  }): Promise<Payment> {
+  async createPayment(
+    bookingId: string,
+    amount: number,
+    data: {
+      provider: string;
+      paymentIntentId: string;
+    },
+  ): Promise<Payment> {
     return this.prisma.payment.create({
       data: {
-        bookingId: data.bookingId,
-        amount: data.amount,
+        bookingId: bookingId,
+        amount: amount,
         provider: data.provider,
         paymentIntentId: data.paymentIntentId,
         status: PaymentStatus.PENDING,

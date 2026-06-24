@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { v2 as cloudinary } from "cloudinary";
 import { Readable } from "stream";
+import * as fs from "fs";
 
 @Injectable()
 export class CloudinaryService {
@@ -11,6 +12,7 @@ export class CloudinaryService {
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
   }
+
   async uploadFile(
     file: Express.Multer.File,
     folder: string = "services",
@@ -26,17 +28,34 @@ export class CloudinaryService {
           ],
         },
         (error, result) => {
-          if (error || !result)
+          if (error || !result) {
+            console.error("Cloudinary upload error:", error);
             // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
             return reject(error || new Error("Upload failed"));
+          }
           resolve({ url: result.secure_url, publicId: result.public_id });
         },
       );
 
-      const readableStream = new Readable();
-      readableStream.push(file.buffer);
-      readableStream.push(null);
-      readableStream.pipe(uploadStream);
+      try {
+        // If file has buffer (memory storage), use it
+        if (file.buffer) {
+          const readableStream = new Readable();
+          readableStream.push(file.buffer);
+          readableStream.push(null);
+          readableStream.pipe(uploadStream);
+        }
+        // If file is on disk (disk storage), use the path
+        else if (file.path) {
+          fs.createReadStream(file.path).pipe(uploadStream);
+        } else {
+          reject(new Error("File has no buffer or path - cannot upload"));
+        }
+      } catch (error) {
+        console.error("Error preparing file for upload:", error);
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        reject(error);
+      }
     });
   }
 

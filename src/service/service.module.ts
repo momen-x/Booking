@@ -12,6 +12,10 @@ import { diskStorage } from "multer";
 import { MulterModule } from "@nestjs/platform-express";
 import { join, extname } from "path";
 import { CloudinaryService } from "src/config/cloudinary.service";
+import { UserRepository } from "src/users/user.repository";
+import { PrismaUserRepository } from "src/users/prisma-user.repository";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
 
 @Module({
   controllers: [ServiceController],
@@ -24,6 +28,14 @@ import { CloudinaryService } from "src/config/cloudinary.service";
     {
       provide: ProviderProfileRepository,
       useClass: PrismaProviderProfileRepository,
+    },
+    {
+      provide: UserRepository,
+      useClass: PrismaUserRepository,
+    },
+    {
+      provide: NotificationsRepository,
+      useClass: PrismaNotificationsRepository,
     },
     CloudinaryService,
   ],

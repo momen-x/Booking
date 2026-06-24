@@ -1,11 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsNotEmpty, IsString, Max, Min } from "class-validator";
+import { IsInt, IsNotEmpty, Max, Min } from "class-validator";
 
 export class CreateAvailabilityDto {
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty()
-  providerId!: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // @ApiProperty()
+  // providerId!: string;
   @Max(6)
   @Min(0)
   @IsInt()

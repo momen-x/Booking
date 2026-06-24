@@ -10,12 +10,15 @@ import { JWTPayloadType } from "utils/types";
 import { UserRole } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
 import { UserRepository } from "./user.repository";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
 
 @Injectable()
 export class AuthService {
   constructor(
     private authRepo: UserRepository,
     private jwtService: JwtService,
+    private notificationRepo: NotificationsRepository,
   ) {}
   async register(dto: RegisterUserDto): Promise<{ access_token: string }> {
     const isExistUser = await this.authRepo.findByEmail(dto.email);
@@ -33,7 +36,12 @@ export class AuthService {
       newUser.email,
       newUser.role,
     );
-
+    const successRegisteringMessage: CreateNotificationDTO = {
+      title: "Welcome to our community",
+      message: "you are signup successfully",
+      type: "SYSTEM",
+    };
+    await this.notificationRepo.create(newUser.id, successRegisteringMessage);
     return { access_token };
   }
   async login(loginUser: LoginUserDto): Promise<{ access_token: string }> {

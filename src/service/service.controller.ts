@@ -61,11 +61,26 @@ export class ServiceController {
     return this.serviceService.findAll();
   }
 
+  @Get("provider/current-provider")
+  @ApiResponse({ status: 200, description: "Get all provider's services" })
+  @ApiOperation({ summary: "Get all provider's services" })
+  @Roles(UserRole.PROVIDER)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  findServicesByCurrentProvider(
+    @AuthenticatedUser()
+    user: {
+      id: string;
+      email: string;
+      role: UserRole;
+    },
+  ) {
+    return this.serviceService.getServicesProviderByUserId(user.id);
+  }
   @Get("provider/:providerId")
   @ApiResponse({ status: 200, description: "Get all provider's services" })
   @ApiOperation({ summary: "Get all provider's services" })
   findServicesByProvider(@Param("providerId") providerId: string) {
-    return this.serviceService.getServicesByProvider(providerId);
+    return this.serviceService.getServicesByProviderId(providerId);
   }
 
   @Get(":id")
@@ -109,4 +124,11 @@ export class ServiceController {
   ) {
     return this.serviceService.remove(id, user.role, user.id);
   }
+
+  // @Delete("orphans")
+  // @UseGuards(AuthGuard("jwt"), RolesGuard)
+  // @Roles(UserRole.ADMIN)
+  // deleteOrphanServices() {
+  //   return this.servicesService.deleteOrphanServices();
+  // }
 }

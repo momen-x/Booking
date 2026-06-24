@@ -9,8 +9,16 @@ import { StripeService } from "./stripe.service";
 import { PaymentRepository } from "./payment.repository";
 import { BookingRepository } from "src/bookings/booking.repository";
 import { ServiceRepository } from "src/service/service.repository";
-import { PaymentStatus, BookingStatus, UserRole } from "@prisma/client";
+import {
+  PaymentStatus,
+  BookingStatus,
+  UserRole,
+  NotificationType,
+} from "@prisma/client";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+
 import Stripe from "stripe";
+import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type StripePaymentIntent =
   ReturnType<typeof Stripe.prototype.paymentIntents.retrieve> extends Promise<
@@ -26,6 +34,7 @@ export class PaymentsService {
     private paymentRepo: PaymentRepository,
     private bookingRepo: BookingRepository,
     private serviceRepo: ServiceRepository,
+    private notificationRepo: NotificationsRepository,
   ) {}
 
   // ─── Phase 1: Initiate Payment ─────────────────────────────────────────────
@@ -64,9 +73,7 @@ export class PaymentsService {
     );
 
     // 6. Save Payment record with PENDING status
-    await this.paymentRepo.createPayment({
-      bookingId,
-      amount: service.price,
+    await this.paymentRepo.createPayment(bookingId, service.price, {
       provider: "stripe",
       paymentIntentId: paymentIntent.id,
     });
@@ -118,17 +125,35 @@ export class PaymentsService {
   }) {
     const payment = await this.paymentRepo.findByPaymentIntentId(intent.id);
     if (!payment) return;
+
     await this.paymentRepo.updateStatus(payment.id, PaymentStatus.SUCCESS);
-    await this.bookingRepo.updateBookingStatus(
+    const booking = await this.bookingRepo.updateBookingStatus(
       payment.bookingId,
       BookingStatus.CONFIRMED,
     );
+
+    await this.notificationRepo.create(booking.userId, {
+      title: "Payment confirmed",
+      message: "Your payment was successful and your booking is confirmed.",
+      type: NotificationType.PAYMENT,
+    });
   }
 
   private async handlePaymentFailed(intent: { id: string }) {
     const payment = await this.paymentRepo.findByPaymentIntentId(intent.id);
     if (!payment) return;
+
     await this.paymentRepo.updateStatus(payment.id, PaymentStatus.FAILED);
+    const booking = await this.bookingRepo.findBookingById(payment.bookingId);
+
+    if (booking) {
+      const failedBookingMessage = {
+        title: "Payment failed",
+        message: "Your payment could not be processed. Please try again.",
+        type: NotificationType.PAYMENT,
+      } as CreateNotificationDTO;
+      await this.notificationRepo.create(booking.userId, failedBookingMessage);
+    }
   }
 
   // ─── Refund ────────────────────────────────────────────────────────────────
@@ -152,7 +177,6 @@ export class PaymentsService {
       );
 
     // 4. Call Stripe refund
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await this.stripeService.refundPayment(payment.paymentIntentId);
 
     // 5. Update payment → REFUNDED, booking → CANCELLED

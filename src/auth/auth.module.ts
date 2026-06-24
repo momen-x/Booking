@@ -7,6 +7,8 @@ import { JwtStrategy } from "./jwt.strategy";
 import { UserRepository } from "./user.repository";
 import { PrismaUserRepository } from "./prisma-user.repository";
 import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
+import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
 
 @Module({
   controllers: [AuthController],
@@ -16,6 +18,10 @@ import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
     {
       provide: UserRepository,
       useClass: PrismaUserRepository,
+    },
+    {
+      provide: NotificationsRepository,
+      useClass: PrismaNotificationsRepository,
     },
   ],
   imports: [

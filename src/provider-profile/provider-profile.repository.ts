@@ -8,6 +8,7 @@ export abstract class ProviderProfileRepository {
   ): Promise<ProviderProfile>;
   abstract getAllProviders(): Promise<ProviderProfile[]>;
   abstract findById(id: string): Promise<ProviderProfile | null>;
+  abstract findByUserId(userId: string): Promise<ProviderProfile | null>;
   abstract deleteProvider(id: string): Promise<{ message: string }>;
   abstract updateProviderProfile(
     id: string,
