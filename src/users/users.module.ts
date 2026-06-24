@@ -7,8 +7,7 @@ import { PrismaUserRepository } from "./prisma-user.repository";
 import { AuthRolesGuard } from "./role.guard";
 import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
 import { MulterModule } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
-import { extname, join } from "path";
+import { memoryStorage } from "multer";
 import { CloudinaryService } from "src/config/cloudinary.service";
 import { BookingRepository } from "src/bookings/booking.repository";
 import { PrismaBookingRepository } from "src/bookings/prisma-booking.repository";
@@ -32,16 +31,7 @@ import { PrismaBookingRepository } from "src/bookings/prisma-booking.repository"
     JwtModule,
     PrismaModule,
     MulterModule.register({
-      storage: diskStorage({
-        destination: join(process.cwd(), "images/services"),
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          const fileName = `${uniqueSuffix}${ext}`;
-          cb(null, fileName);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
         const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
         if (!allowedMimeTypes.includes(file.mimetype)) {

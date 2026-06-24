@@ -9,8 +9,7 @@ import { PrismaProviderRequestRepository } from "./prisma-provider-request.repos
 import { UserRepository } from "src/users/user.repository";
 import { PrismaUserRepository } from "src/users/prisma-user.repository";
 import { MulterModule } from "@nestjs/platform-express";
-import { diskStorage } from "multer";
-import { extname, join } from "path";
+import { memoryStorage } from "multer";
 import { CloudinaryService } from "src/config/cloudinary.service";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
 import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
@@ -38,16 +37,7 @@ import { PrismaNotificationsRepository } from "src/notifications/prisma-notifica
     UsersModule,
     JwtModule,
     MulterModule.register({
-      storage: diskStorage({
-        destination: join(process.cwd(), "images/services"),
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + "-" + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          const fileName = `${uniqueSuffix}${ext}`;
-          cb(null, fileName);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
         const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
         if (!allowedMimeTypes.includes(file.mimetype)) {
