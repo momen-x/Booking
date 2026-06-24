@@ -19,7 +19,7 @@ async function bootstrap() {
   });
   app.use(helmet());
   app.enableCors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://booking-app-nu-blue.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   });
@@ -35,7 +35,7 @@ async function bootstrap() {
   const swagger = new DocumentBuilder()
     .setTitle("learn nest js")
     .setDescription("this is a description of the project")
-    .addServer("http://localhost:5000")
+    .addServer("https://booking-wad3.onrender.com")
     .addBearerAuth()
     .setVersion("1.0")
     .setTermsOfService("https://www.google.com/") //here add your terms and privacy policy
