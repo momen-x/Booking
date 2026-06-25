@@ -56,10 +56,14 @@ export class AuthController {
   }
   @HttpCode(HttpStatus.OK)
   @Post("logout")
-  @ApiResponse({ status: 200, description: "logout user" })
-  @ApiOperation({ summary: "logout user" })
   logout(@Res({ passthrough: true }) res: express.Response) {
-    res.clearCookie("access_token");
+    res.clearCookie("access_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+    });
+
     return { success: true };
   }
 }
