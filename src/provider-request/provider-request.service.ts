@@ -3,6 +3,7 @@ import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
 import { ProviderRequestRepository } from "./provider-request.repository";
 import { CloudinaryService } from "src/config/cloudinary.service";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
 
 @Injectable()
 export class ProviderRequestService {
@@ -94,5 +95,9 @@ export class ProviderRequestService {
       throw new NotFoundException("request not found");
     }
     return request;
+  }
+  async updateStatus(id: string, status: UpdateProviderRequestDto) {
+    const request = await this.checkIfRequestExist(id);
+    return this.providerRequestRepo.updateStatus(request.id, status);
   }
 }

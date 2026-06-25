@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   BadRequestException,
+  Put,
 } from "@nestjs/common";
 import { ProviderRequestService } from "./provider-request.service";
 import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
@@ -19,6 +20,7 @@ import { AuthRolesGuard } from "src/users/role.guard";
 import { AuthenticatedUser } from "src/users/decorator/authenticated-user.decorator";
 import { ApiBody, ApiConsumes, ApiResponse } from "@nestjs/swagger";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
 
 @Controller("provider-request")
 export class ProviderRequestController {
@@ -110,5 +112,18 @@ export class ProviderRequestController {
   })
   remove(@Param("id") id: string) {
     return this.providerRequestService.remove(id);
+  }
+  @Put(":id")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  @ApiResponse({
+    status: 200,
+    description: "Update provider request status",
+  })
+  updateStatus(
+    @Param("id") id: string,
+    @Body() body: UpdateProviderRequestDto,
+  ) {
+    return this.providerRequestService.updateStatus(id, body);
   }
 }

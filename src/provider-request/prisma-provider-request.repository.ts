@@ -3,6 +3,7 @@ import { ProviderRequestRepository } from "./provider-request.repository";
 import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
 import { PrismaService } from "src/infrastructure/prisma/prisma.service";
 import { ProviderRequest } from "./entities/provider-request.entity";
+import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
 
 @Injectable()
 export class PrismaProviderRequestRepository implements ProviderRequestRepository {
@@ -37,5 +38,16 @@ export class PrismaProviderRequestRepository implements ProviderRequestRepositor
   }
   delete(id: string): Promise<ProviderRequest> {
     return this.prisma.providerRequest.delete({ where: { id } });
+  }
+  updateStatus(
+    id: string,
+    dto: UpdateProviderRequestDto,
+  ): Promise<ProviderRequest> {
+    return this.prisma.providerRequest.update({
+      where: { id },
+      data: {
+        status: dto.status || "PENDING",
+      },
+    });
   }
 }

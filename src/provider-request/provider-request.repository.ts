@@ -1,5 +1,6 @@
 // import { ProviderRequest } from "@prisma/client";
 import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
+import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
 import { ProviderRequest } from "./entities/provider-request.entity";
 
 export abstract class ProviderRequestRepository {
@@ -10,4 +11,8 @@ export abstract class ProviderRequestRepository {
   abstract findAll(): Promise<ProviderRequest[]>;
   abstract findById(id: string): Promise<ProviderRequest | null>;
   abstract delete(id: string): Promise<ProviderRequest>;
+  abstract updateStatus(
+    id: string,
+    status: UpdateProviderRequestDto,
+  ): Promise<ProviderRequest>;
 }
