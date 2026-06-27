@@ -13,6 +13,8 @@ import { memoryStorage } from "multer";
 import { CloudinaryService } from "src/config/cloudinary.service";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
 import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
+import { ProviderProfileRepository } from "src/provider-profile/provider-profile.repository";
+import { PrismaProviderProfileRepository } from "src/provider-profile/prisma-provider-profile.repository";
 
 @Module({
   controllers: [ProviderRequestController],
@@ -22,6 +24,10 @@ import { PrismaNotificationsRepository } from "src/notifications/prisma-notifica
     {
       provide: ProviderRequestRepository,
       useClass: PrismaProviderRequestRepository,
+    },
+    {
+      provide: ProviderProfileRepository,
+      useClass: PrismaProviderProfileRepository,
     },
     {
       provide: UserRepository,

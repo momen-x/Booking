@@ -8,6 +8,7 @@ import { ProviderRequestRepository } from "./provider-request.repository";
 import { CloudinaryService } from "src/config/cloudinary.service";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
 import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
+import { ProviderProfileRepository } from "src/provider-profile/provider-profile.repository";
 
 @Injectable()
 export class ProviderRequestService {
@@ -15,6 +16,7 @@ export class ProviderRequestService {
     private readonly providerRequestRepo: ProviderRequestRepository,
     private cloudinaryService: CloudinaryService,
     private notificationsRepo: NotificationsRepository,
+    private providerProfileRepo: ProviderProfileRepository,
   ) {}
   async create(
     userId: string,
@@ -25,14 +27,14 @@ export class ProviderRequestService {
       Portfolio?: Express.Multer.File[];
     },
   ) {
-    const isProvider = await this.providerRequestRepo.findByUserId(userId);
+    const isProvider = await this.providerProfileRepo.findByUserId(userId);
     if (isProvider) {
-      throw new BadRequestException("You already have a provider request");
+      throw new BadRequestException("You already have a provider profile");
     }
-    const isHasPendingRequest =
-      await this.providerRequestRepo.findByUserId(userId);
-    const filterPendingRequests = isHasPendingRequest?.filter(
-      (request) => request.status === "PENDING",
+    const isHasRequest = await this.providerRequestRepo.findByUserId(userId);
+    const filterPendingRequests = isHasRequest?.filter(
+      (request) =>
+        request.status === "PENDING" || request.status === "APPROVED",
     );
     if (filterPendingRequests && filterPendingRequests.length > 0)
       throw new BadRequestException(
