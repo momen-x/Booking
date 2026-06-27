@@ -4,6 +4,7 @@ import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
 import { PrismaService } from "src/infrastructure/prisma/prisma.service";
 import { ProviderRequest } from "./entities/provider-request.entity";
 import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
+import { RequestStatus } from "@prisma/client";
 
 @Injectable()
 export class PrismaProviderRequestRepository implements ProviderRequestRepository {
@@ -51,6 +52,8 @@ export class PrismaProviderRequestRepository implements ProviderRequestRepositor
     });
   }
   findByUserId(userId: string): Promise<ProviderRequest[] | null> {
-    return this.prisma.providerRequest.findMany({ where: { userId } });
+    return this.prisma.providerRequest.findMany({
+      where: { userId, status: RequestStatus.PENDING },
+    });
   }
 }
