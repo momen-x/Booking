@@ -102,6 +102,17 @@ export class ProviderRequestController {
   findOne(@Param("id") id: string) {
     return this.providerRequestService.findOne(id);
   }
+  @Get("current-user")
+  @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
+  @ApiResponse({
+    status: 200,
+    description: "Get user's provider request",
+  })
+  findCurrentUserProviderRequest(
+    @AuthenticatedUser() user: { id: string; role: UserRole },
+  ) {
+    return this.providerRequestService.findByUserId(user.id);
+  }
 
   @Delete(":id")
   @Roles(UserRole.ADMIN)

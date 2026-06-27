@@ -119,4 +119,7 @@ export class ProviderRequestService {
     const request = await this.checkIfRequestExist(id);
     return this.providerRequestRepo.updateStatus(request.id, status);
   }
+  async findByUserId(userId: string) {
+    return this.providerRequestRepo.findByUserId(userId);
+  }
 }
