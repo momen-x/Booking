@@ -10,6 +10,8 @@ import { UserRepository } from "src/users/user.repository";
 import { PrismaUserRepository } from "src/users/prisma-user.repository";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
 import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
+import { ProviderRequestRepository } from "src/provider-request/provider-request.repository";
+import { PrismaProviderRequestRepository } from "src/provider-request/prisma-provider-request.repository";
 
 @Module({
   controllers: [ProviderProfileController],
@@ -19,6 +21,10 @@ import { PrismaNotificationsRepository } from "src/notifications/prisma-notifica
     {
       provide: ProviderProfileRepository,
       useClass: PrismaProviderProfileRepository,
+    },
+    {
+      provide: ProviderRequestRepository,
+      useClass: PrismaProviderRequestRepository,
     },
     {
       provide: UserRepository,

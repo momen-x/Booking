@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
 import { ProviderRequestRepository } from "./provider-request.repository";
 import { CloudinaryService } from "src/config/cloudinary.service";
@@ -21,6 +25,19 @@ export class ProviderRequestService {
       Portfolio?: Express.Multer.File[];
     },
   ) {
+    const isProvider = await this.providerRequestRepo.findByUserId(userId);
+    if (isProvider) {
+      throw new BadRequestException("You already have a provider request");
+    }
+    const isHasPendingRequest =
+      await this.providerRequestRepo.findByUserId(userId);
+    const filterPendingRequests = isHasPendingRequest?.filter(
+      (request) => request.status === "PENDING",
+    );
+    if (filterPendingRequests && filterPendingRequests.length > 0)
+      throw new BadRequestException(
+        "You already have a pending provider request",
+      );
     // Upload images to Cloudinary
     let IDImageUrl = "";
     let selfieIDImageUrl = "";

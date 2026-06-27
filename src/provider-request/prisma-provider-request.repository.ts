@@ -50,4 +50,7 @@ export class PrismaProviderRequestRepository implements ProviderRequestRepositor
       },
     });
   }
+  findByUserId(userId: string): Promise<ProviderRequest[] | null> {
+    return this.prisma.providerRequest.findMany({ where: { userId } });
+  }
 }

@@ -15,4 +15,5 @@ export abstract class ProviderRequestRepository {
     id: string,
     status: UpdateProviderRequestDto,
   ): Promise<ProviderRequest>;
+  abstract findByUserId(userId: string): Promise<ProviderRequest[] | null>;
 }

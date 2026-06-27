@@ -7,6 +7,7 @@ import {
   Delete,
   Put,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import { ProviderProfileService } from "./provider-profile.service";
 import { UpdateProviderProfileDto } from "./dto/update-provider-profile.dto";
@@ -16,6 +17,7 @@ import { AuthRolesGuard } from "src/users/role.guard";
 import { AuthGuard } from "@nestjs/passport";
 import { AuthenticatedUser } from "src/users/decorator/authenticated-user.decorator";
 import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
+import { ApiQuery } from "@nestjs/swagger";
 
 @Controller("providers")
 export class ProviderProfileController {
@@ -24,13 +26,24 @@ export class ProviderProfileController {
   ) {}
 
   @Post()
+  @ApiQuery({
+    name: "provider-request",
+    required: false,
+    type: String,
+    description: "filtering by title",
+  })
   @Roles(UserRole.ADMIN) // Only admin can create products
   @UseGuards(AuthGuard("jwt"), AuthRolesGuard)
   create(
     @Body()
     createProviderProfileDto: CreateProviderProfileDto,
+    @Query("provider-request") providerRequest?: string,
   ) {
-    return this.providerProfileService.create(createProviderProfileDto);
+    if (!providerRequest) providerRequest = "";
+    return this.providerProfileService.create(
+      createProviderProfileDto,
+      providerRequest,
+    );
   }
 
   @Get()

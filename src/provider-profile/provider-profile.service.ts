@@ -7,10 +7,11 @@ import {
 import { CreateProviderProfileDto } from "./dto/create-provider-profile.dto";
 import { UpdateProviderProfileDto } from "./dto/update-provider-profile.dto";
 import { ProviderProfileRepository } from "./provider-profile.repository";
-import { UserRole } from "@prisma/client";
+import { RequestStatus, UserRole } from "@prisma/client";
 import { UserRepository } from "src/users/user.repository";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
 import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
+import { ProviderRequestRepository } from "src/provider-request/provider-request.repository";
 
 @Injectable()
 export class ProviderProfileService {
@@ -18,9 +19,13 @@ export class ProviderProfileService {
     private providerProfileRepo: ProviderProfileRepository,
     private userRepo: UserRepository,
     private notificationRepo: NotificationsRepository,
+    private providerRequestRepo: ProviderRequestRepository,
   ) {}
 
-  async create(createProviderProfileDto: CreateProviderProfileDto) {
+  async create(
+    createProviderProfileDto: CreateProviderProfileDto,
+    providerRequest: string,
+  ) {
     const user = await this.userRepo.findById(createProviderProfileDto.userId);
     if (!user) throw new NotFoundException("User not found");
     if (user.role === "PROVIDER")
@@ -28,6 +33,16 @@ export class ProviderProfileService {
     if (user.role !== "ADMIN") {
       await this.userRepo.updateUserRole(user.id, UserRole.PROVIDER);
     }
+    if (providerRequest.length > 0) {
+      const isProviderRequest =
+        await this.providerRequestRepo.findById(providerRequest);
+      if (!isProviderRequest)
+        throw new NotFoundException("Provider request not found");
+    }
+    await this.providerRequestRepo.updateStatus(providerRequest, {
+      status: RequestStatus.APPROVED,
+    });
+
     const successCreateProviderMessage: CreateNotificationDTO = {
       title: "Add Provider",
       message: "you are provider now",
