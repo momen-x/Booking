@@ -9,7 +9,7 @@ import { UpdateServiceDto } from "./dto/update-service.dto";
 import { ServiceRepository } from "./service.repository";
 import { UserRole } from "@prisma/client";
 import { ProviderProfileRepository } from "../provider-profile/provider-profile.repository";
-import { CloudinaryService } from "src/config/cloudinary.service";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { UserRepository } from "src/users/user.repository";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
 import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";

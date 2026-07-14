@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
 import { ProviderRequestRepository } from "./provider-request.repository";
-import { CloudinaryService } from "src/config/cloudinary.service";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { NotificationsRepository } from "src/notifications/notifications.repository";
 import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
 import { ProviderProfileRepository } from "src/provider-profile/provider-profile.repository";

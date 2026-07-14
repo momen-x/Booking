@@ -8,7 +8,7 @@ import { AuthRolesGuard } from "./role.guard";
 import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
 import { MulterModule } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
-import { CloudinaryService } from "src/config/cloudinary.service";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { BookingRepository } from "src/bookings/booking.repository";
 import { PrismaBookingRepository } from "src/bookings/prisma-booking.repository";
 

@@ -7,7 +7,7 @@ import { PrismaUserRepository } from "src/users/prisma-user.repository";
 import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
 import { UsersModule } from "src/users/users.module";
 import { JwtModule } from "@nestjs/jwt";
-import { CloudinaryService } from "src/config/cloudinary.service";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { PrismaNotificationsRepository } from "./prisma-notifications.repository";
 
 @Module({

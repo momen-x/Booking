@@ -11,7 +11,7 @@ import {
 } from "./dto/update-user.dto";
 import * as bcrypt from "bcryptjs";
 import { User } from "./entities/user.entity";
-import { CloudinaryService } from "src/config/cloudinary.service";
+import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { UserRole } from "@prisma/client";
 import { BookingRepository } from "src/bookings/booking.repository";
 
