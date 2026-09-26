@@ -113,7 +113,7 @@ export class PrismaBookingRepository implements BookingRepository {
     const bookings = await this.prisma.booking.findMany({
       where: { userId, provider: { isActive: true }, deletedAt: null },
       include: {
-        service: { select: { name: true, price: true, duration: true } },
+        service: { select: { name: true, price: true, duration: true, images: true } },
         provider: { select: { businessName: true, location: true } },
       },
       orderBy: { date: "asc" },
