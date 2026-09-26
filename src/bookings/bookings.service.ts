@@ -108,6 +108,70 @@ export class BookingsService {
     return booking;
   }
 
+  async findAvailableTimes(providerId: string, date?: string) {
+    if (typeof providerId !== "string" || !providerId.trim()) {
+      throw new BadRequestException("providerId is required");
+    }
+    const timezone = "Asia/Gaza";
+    const now = DateTime.now().setZone(timezone);
+    const requestedDate = date ?? now.toISODate();
+    if (typeof requestedDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+      throw new BadRequestException("date must use YYYY-MM-DD format");
+    }
+    const day = DateTime.fromISO(requestedDate, { zone: timezone });
+    if (!day.isValid) {
+      throw new BadRequestException("Invalid date");
+    }
+    const provider = await this.checkIfProviderExist(providerId);
+    const dayOfWeek = day.weekday % 7;
+    const result = {
+      date: requestedDate,
+      dayOfWeek,
+      timezone,
+      availableTimes: [] as { startTime: string; endTime: string }[],
+    };
+    if (!provider.isActive || day.plus({ days: 1 }).toMillis() <= now.toMillis()) {
+      return result;
+    }
+    const [availability, bookings] = await Promise.all([
+      this.availabilityRepo.findAvailabilitiesByProviderId(providerId),
+      this.bookingRepo.findBusyTimes(
+        providerId,
+        day.toJSDate(),
+        day.plus({ days: 1 }).toJSDate(),
+      ),
+    ]);
+    const toTimestamp = (minutes: number): number =>
+      minutes === 1440
+        ? day.plus({ days: 1 }).toMillis()
+        : day.set({ hour: Math.floor(minutes / 60), minute: minutes % 60 }).toMillis();
+    const busy = bookings
+      .map((booking) => ({ start: booking.startTime.getTime(), end: booking.endTime.getTime() }))
+      .sort((a, b) => a.start - b.start);
+    const addRange = (start: number, end: number) => {
+      if (start < end) {
+        result.availableTimes.push({
+          startTime: DateTime.fromMillis(start, { zone: timezone }).toISO(),
+          endTime: DateTime.fromMillis(end, { zone: timezone }).toISO(),
+        });
+      }
+    };
+    for (const slot of availability
+      .filter((slot) => slot.dayOfWeek === dayOfWeek)
+      .sort((a, b) => a.startTime - b.startTime)) {
+      let cursor = Math.max(toTimestamp(slot.startTime), Math.ceil(now.toMillis() / 60000) * 60000);
+      const end = toTimestamp(slot.endTime);
+      for (const booking of busy) {
+        if (booking.end <= cursor || booking.start >= end) continue;
+        addRange(cursor, Math.min(booking.start, end));
+        cursor = Math.max(cursor, booking.end);
+        if (cursor >= end) break;
+      }
+      addRange(cursor, end);
+    }
+    return result;
+  }
+
   async findOne(id: string) {
     const booking = await this.checkIfBookingExist(id);
     return booking;

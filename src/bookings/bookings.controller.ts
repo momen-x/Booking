@@ -14,7 +14,7 @@ import { updateBookingStatus } from "./dto/update-booking.dto";
 import { AuthenticatedUser } from "src/users/decorator/authenticated-user.decorator";
 import { UserRole } from "@prisma/client";
 import { AuthGuard } from "@nestjs/passport";
-import { ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiOperation, ApiQuery, ApiResponse } from "@nestjs/swagger";
 import { Roles } from "src/users/decorator/user-role.decorator";
 
 @Controller("booking")
@@ -86,6 +86,18 @@ export class BookingsController {
     // return `hi everyone the providerId is : ${providerId}, and the date is : ${date.toISOString()}`;
     return this.bookingsService.findByProviderIdAndDay(providerId, date);
   }
+  @Get("available-times")
+  @ApiOperation({ summary: "Get provider's free time ranges for a day" })
+  @ApiQuery({ name: "providerId", required: true, type: String })
+  @ApiQuery({ name: "date", required: false, example: "2026-09-26" })
+  @ApiResponse({ status: 200, description: "Day and available time ranges" })
+  findAvailableTimes(
+    @Query("providerId") providerId: string,
+    @Query("date") date?: string,
+  ) {
+    return this.bookingsService.findAvailableTimes(providerId, date);
+  }
+
   @Get(":id")
   @ApiResponse({ status: 200, description: "Get booking by ID" })
   @ApiOperation({ summary: "Get booking by ID" })

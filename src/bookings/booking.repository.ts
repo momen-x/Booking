@@ -2,6 +2,11 @@ import { CreateBookingDto } from "./dto/create-booking.dto";
 import { Booking } from "./entities/bookings.entity";
 
 export abstract class BookingRepository {
+  abstract findBusyTimes(
+    providerId: string,
+    startTime: Date,
+    endTime: Date,
+  ): Promise<{ startTime: Date; endTime: Date }[]>;
   abstract createBookingWithTransaction(
     userId: string,
     dto: CreateBookingDto,

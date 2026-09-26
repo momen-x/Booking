@@ -9,6 +9,19 @@ import { BookingStatus } from "@prisma/client";
 @Injectable()
 export class PrismaBookingRepository implements BookingRepository {
   constructor(private readonly prisma: PrismaService) {}
+  async findBusyTimes(providerId: string, startTime: Date, endTime: Date) {
+    return this.prisma.booking.findMany({
+      where: {
+        providerId,
+        deletedAt: null,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        startTime: { lt: endTime },
+        endTime: { gt: startTime },
+      },
+      select: { startTime: true, endTime: true },
+      orderBy: { startTime: "asc" },
+    });
+  }
   async createBooking(
     userId: string,
     dto: CreateBookingDto,
