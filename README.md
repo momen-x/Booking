@@ -1,175 +1,197 @@
-# Booking & Service Management System
+# Booking & Service Marketplace — Backend
 
-A scalable service marketplace and booking platform built with **NestJS**, **Prisma ORM**, **PostgreSQL**, and **Stripe**.
+A modular backend API for a multi-role booking platform built with **NestJS**, **PostgreSQL**, **Prisma ORM**, **JWT Authentication**, **Stripe**, and **Cloudinary**.
 
-The platform allows users to browse providers, book services, manage appointments, process secure payments, and receive notifications. It also includes a complete provider onboarding workflow and role-based access control.
-
----
-
-## Tech Stack
-
-- NestJS
-- PostgreSQL
-- Prisma ORM
-- JWT Authentication
-- Passport.js
-- Stripe
-- Multer
-- Cloudinary
-- Swagger
-- PNPM
+The backend supports authentication, provider onboarding, service management, availability scheduling, booking workflows, payments, notifications, and role-based access control.
 
 ---
 
-## Features
+## 🚀 Overview
+
+The backend powers a service marketplace where:
+
+- Users can register, browse services, and create bookings.
+- Providers can manage services and availability.
+- Admins can review provider requests and manage platform data.
+- Payments are handled through Stripe.
+- Images and verification media are handled through Cloudinary.
+
+---
+
+## ✨ Key Features
 
 ### Authentication & Authorization
-
-- JWT Authentication
-- Secure HttpOnly Cookie Authentication
+- User registration
+- Login / logout
+- JWT authentication
+- Refresh-token support
+- Password hashing
+- HttpOnly cookie authentication
 - Role-Based Access Control (RBAC)
-- User Roles:
-  - USER
-  - PROVIDER
-  - ADMIN
+
+Supported roles:
+
+- User
+- Provider
+- Admin
+
+---
 
 ### User Management
+- Profile management
+- Password updates
+- Profile image upload
+- Account-level authorization
 
-- User Registration
-- User Login / Logout
-- Profile Management
-- Password Updates
-- Profile Image Upload
+---
 
 ### Provider Management
+- Provider profile creation
+- Business information management
+- Provider status management
+- Provider dashboard data
 
-- Provider Profile Creation
-- Business Information Management
-- Provider Dashboard
-- Provider Status Management
+---
 
 ### Provider Request Workflow
 
 Users can apply to become service providers by submitting:
 
-- Personal Information
+- Personal information
 - Government ID
-- Selfie Verification
-- Portfolio Images
+- Selfie verification
+- Portfolio images
 
 Admins can:
 
-- Review Requests
-- Approve Requests
-- Reject Requests
+- Review requests
+- Approve requests
+- Reject requests
+
+---
 
 ### Service Management
-
 Providers can:
 
-- Create Services
-- Update Services
-- Delete Services
-- Upload Service Images
-- Manage Pricing and Duration
+- Create services
+- Update services
+- Delete services
+- Upload images
+- Manage price and duration
+
+---
 
 ### Availability Scheduling
-
 Providers can:
 
-- Define Weekly Availability
-- Manage Working Hours
-- Update Availability Slots
+- Configure weekly availability
+- Set working hours
+- Manage available slots
+
+---
 
 ### Booking System
 
-- Service Booking
-- Conflict Detection
-- Booking Validation
-- Booking Status Tracking
-- Soft Delete Support
-- Automatic Expiration Handling
+The booking system includes:
+
+- Booking creation
+- Conflict detection
+- Booking validation
+- Booking status tracking
+- Soft delete support
+- Automatic expiration handling
 
 Booking statuses:
 
-- PENDING
-- CONFIRMED
-- CANCELLED
+```text
+PENDING
+CONFIRMED
+CANCELLED
+```
+
+---
 
 ### Payment Processing
 
-Stripe Integration:
+Stripe integration includes:
 
 - Payment Intents
-- Webhook Processing
-- Payment Verification
-- Refund Support
+- Webhook processing
+- Payment verification
+- Refund support
 
 Payment statuses:
 
-- PENDING
-- SUCCESS
-- FAILED
-- REFUNDED
+```text
+PENDING
+SUCCESS
+FAILED
+REFUNDED
+```
+
+---
 
 ### Notifications
 
-Users receive notifications for:
+Notifications are generated for:
 
-- Booking Events
-- Payment Events
-- Provider Requests
-- System Messages
-
----
-
-## Database Models
-
-- User
-- ProviderProfile
-- Service
-- Availability
-- Booking
-- Payment
-- ProviderRequest
-- Notification
+- Booking events
+- Payment events
+- Provider request updates
+- System messages
 
 ---
 
-## Architecture
+## 🧱 Architecture
 
-The project follows a modular architecture and Repository Pattern.
+The backend follows a modular architecture with clear separation between business logic and data access.
 
-Each module contains:
+Each feature typically contains:
 
 ```text
 module/
-├── controller
-├── service
-├── repository
-├── prisma-repository
-├── dto
-├── entity
-└── module
+├── controller/
+├── service/
+├── repo/
+├── dto/
+├── entity/
+└── module.ts
 ```
 
-### Layers
+Main layers:
 
-- **Controller Layer** → Handles HTTP requests and responses.
-- **Service Layer** → Contains business logic and application rules.
-- **Repository Layer** → Defines data access contracts.
-- **Prisma Repository Layer** → Handles database operations using Prisma ORM.
+- **Controller Layer** — HTTP request/response handling
+- **Service Layer** — business rules
+- **Repository Layer** — data-access abstraction
+- **Prisma Layer** — PostgreSQL operations through Prisma ORM
 
-This separation improves:
+This structure improves:
 
 - Maintainability
-- Scalability
 - Testability
-- Clean Architecture practices
+- Scalability
+- Separation of concerns
+- Easier database-layer changes
 
 ---
 
-## Project Structure
+## 🛠️ Tech Stack
+
+- NestJS
+- TypeScript
+- PostgreSQL
+- Prisma ORM
+- JWT
+- Passport.js
+- Stripe
+- Cloudinary
+- Multer
+- Swagger
+- PNPM
+
+---
+
+## 📂 Project Structure
 
 ```text
 src/
@@ -192,68 +214,46 @@ src/
 
 ---
 
-## Installation
-
-### Clone Repository
-
-```bash
-git clone <repository-url>
-cd booking-system
-```
-
-### Install Dependencies
-
-```bash
-pnpm install
-```
-
-### Environment Variables
+## ⚙️ Environment Variables
 
 Create a `.env` file:
 
 ```env
 PORT=5000
 
-DATABASE_URL="postgresql://user:password@localhost:5432/booking_db"
+DATABASE_URL=postgresql://user:password@localhost:5432/booking_db
 
-JWT_SECRET="your_jwt_secret"
+JWT_SECRET=your_jwt_secret
+JWT_REFRESH_SECRET=your_refresh_secret
 
-STRIPE_SECRET_KEY="sk_test_xxxxx"
-STRIPE_WEBHOOK_SECRET="whsec_xxxxx"
+STRIPE_SECRET_KEY=sk_test_xxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxx
 
-CLOUDINARY_CLOUD_NAME="xxxxx"
-CLOUDINARY_API_KEY="xxxxx"
-CLOUDINARY_API_SECRET="xxxxx"
+CLOUDINARY_CLOUD_NAME=xxxxx
+CLOUDINARY_API_KEY=xxxxx
+CLOUDINARY_API_SECRET=xxxxx
 ```
 
-### Database Setup
-
-```bash
-pnpm prisma migrate dev
-pnpm prisma generate
-```
-
-### Start Development Server
-
-```bash
-pnpm run start:dev
-```
-
-### Build Production Version
-
-```bash
-pnpm run build
-```
-
-### Run Production Server
-
-```bash
-pnpm run start:prod
-```
+> Never expose backend secret keys in frontend environment variables.
 
 ---
 
-## API Documentation
+## 🗄️ Database
+
+Main models include:
+
+- User
+- ProviderProfile
+- Service
+- Availability
+- Booking
+- Payment
+- ProviderRequest
+- Notification
+
+---
+
+## 🧪 API Documentation
 
 Swagger documentation is available at:
 
@@ -263,9 +263,9 @@ http://localhost:5000/api
 
 ---
 
-## Stripe Webhook
+## 💳 Stripe Webhook
 
-Configure Stripe Webhooks to:
+Local:
 
 ```text
 http://localhost:5000/api/payments/webhook
@@ -279,6 +279,70 @@ https://your-domain.com/api/payments/webhook
 
 ---
 
-## License
+## ▶️ Getting Started
 
-This project is licensed under the MIT License.
+### Install dependencies
+
+```bash
+pnpm install
+```
+
+### Generate Prisma client
+
+```bash
+pnpm prisma generate
+```
+
+### Run migrations
+
+```bash
+pnpm prisma migrate dev
+```
+
+### Start development server
+
+```bash
+pnpm run start:dev
+```
+
+---
+
+## 🏗️ Production
+
+```bash
+pnpm run build
+pnpm run start:prod
+```
+
+---
+
+## 🎯 What I Learned
+
+This project was one of my first large backend systems built with a structured architecture.
+
+It helped me gain practical experience with:
+
+- Modular backend architecture
+- Repository pattern
+- Multi-role authorization
+- Secure authentication
+- Booking domain logic
+- Payment webhooks
+- Database modeling
+- Separation of business logic and persistence
+- Designing larger applications without relying on tutorial structure
+
+---
+
+## 📌 Status
+
+The project is maintained as a portfolio project demonstrating full-stack architecture and backend system design.
+
+---
+
+## 👨‍💻 Author
+
+**Mo'men Alswafiri**
+
+- GitHub: https://github.com/momen-x
+- LinkedIn: https://www.linkedin.com/in/mo’men-alswafiri-8b6491346
