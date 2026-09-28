@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { UserRepository } from "./user.repository";
+import { UserRepository } from "./repo/user.repository";
 import {
   UpdateUserPasswordByAdminDto,
   UpdateUserPasswordDto,
@@ -13,7 +13,7 @@ import * as bcrypt from "bcryptjs";
 import { User } from "./entities/user.entity";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
 import { UserRole } from "@prisma/client";
-import { BookingRepository } from "src/bookings/booking.repository";
+import { BookingRepository } from "src/bookings/repo/booking.repository";
 
 @Injectable()
 export class UsersService {

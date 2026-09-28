@@ -11,16 +11,16 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { CreateBookingDto } from "./dto/create-booking.dto";
-import { BookingRepository } from "./booking.repository";
-import { ProviderProfileRepository } from "src/provider-profile/provider-profile.repository";
-import { ServiceRepository } from "src/service/service.repository";
-import { UserRepository } from "src/users/user.repository";
-import { AvailabilityRepository } from "src/availability/availability.repository";
+import { BookingRepository } from "./repo/booking.repository";
+import { ProviderProfileRepository } from "src/provider-profile/repo/provider-profile.repository";
+import { ServiceRepository } from "src/service/repo/service.repository";
+import { UserRepository } from "src/users/repo/user.repository";
+import { AvailabilityRepository } from "src/availability/repo/availability.repository";
 import { BookingStatus } from "utils/enums";
 import { UserRole } from "@prisma/client";
 import { DateTime } from "luxon";
-import { PaymentRepository } from "src/payments/payment.repository";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { PaymentRepository } from "src/payments/repo/payment.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
 import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
 
 // const zone = "Asia/Gaza";
@@ -115,7 +115,10 @@ export class BookingsService {
     const timezone = "Asia/Gaza";
     const now = DateTime.now().setZone(timezone);
     const requestedDate = date ?? now.toISODate();
-    if (typeof requestedDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+    if (
+      typeof requestedDate !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)
+    ) {
       throw new BadRequestException("date must use YYYY-MM-DD format");
     }
     const day = DateTime.fromISO(requestedDate, { zone: timezone });
@@ -130,7 +133,10 @@ export class BookingsService {
       timezone,
       availableTimes: [] as { startTime: string; endTime: string }[],
     };
-    if (!provider.isActive || day.plus({ days: 1 }).toMillis() <= now.toMillis()) {
+    if (
+      !provider.isActive ||
+      day.plus({ days: 1 }).toMillis() <= now.toMillis()
+    ) {
       return result;
     }
     const [availability, bookings] = await Promise.all([
@@ -144,9 +150,14 @@ export class BookingsService {
     const toTimestamp = (minutes: number): number =>
       minutes === 1440
         ? day.plus({ days: 1 }).toMillis()
-        : day.set({ hour: Math.floor(minutes / 60), minute: minutes % 60 }).toMillis();
+        : day
+            .set({ hour: Math.floor(minutes / 60), minute: minutes % 60 })
+            .toMillis();
     const busy = bookings
-      .map((booking) => ({ start: booking.startTime.getTime(), end: booking.endTime.getTime() }))
+      .map((booking) => ({
+        start: booking.startTime.getTime(),
+        end: booking.endTime.getTime(),
+      }))
       .sort((a, b) => a.start - b.start);
     const addRange = (start: number, end: number) => {
       if (start < end) {
@@ -159,7 +170,10 @@ export class BookingsService {
     for (const slot of availability
       .filter((slot) => slot.dayOfWeek === dayOfWeek)
       .sort((a, b) => a.startTime - b.startTime)) {
-      let cursor = Math.max(toTimestamp(slot.startTime), Math.ceil(now.toMillis() / 60000) * 60000);
+      let cursor = Math.max(
+        toTimestamp(slot.startTime),
+        Math.ceil(now.toMillis() / 60000) * 60000,
+      );
       const end = toTimestamp(slot.endTime);
       for (const booking of busy) {
         if (booking.end <= cursor || booking.start >= end) continue;

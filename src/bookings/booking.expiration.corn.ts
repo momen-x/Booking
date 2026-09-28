@@ -4,11 +4,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { BookingRepository } from "./booking.repository";
-import { PaymentRepository } from "src/payments/payment.repository";
+import { BookingRepository } from "./repo/booking.repository";
+import { PaymentRepository } from "src/payments/repo/payment.repository";
 import { StripeService } from "src/payments/stripe.service";
 import { PaymentStatus, NotificationType } from "@prisma/client";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
 
 @Injectable()
 export class BookingExpirationCron {

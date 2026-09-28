@@ -6,16 +6,16 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { StripeService } from "./stripe.service";
-import { PaymentRepository } from "./payment.repository";
-import { BookingRepository } from "src/bookings/booking.repository";
-import { ServiceRepository } from "src/service/service.repository";
+import { PaymentRepository } from "./repo/payment.repository";
+import { BookingRepository } from "src/bookings/repo/booking.repository";
+import { ServiceRepository } from "src/service/repo/service.repository";
 import {
   PaymentStatus,
   BookingStatus,
   UserRole,
   NotificationType,
 } from "@prisma/client";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
 
 import Stripe from "stripe";
 import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";

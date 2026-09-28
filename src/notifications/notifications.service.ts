@@ -3,9 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { NotificationsRepository } from "./notifications.repository";
+import { NotificationsRepository } from "./repo/notifications.repository";
 import { CreateNotificationDTO } from "./dto/create-notifications.dto";
-import { UserRepository } from "src/users/user.repository";
+import { UserRepository } from "src/users/repo/user.repository";
 
 @Injectable()
 export class NotificationService {

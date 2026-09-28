@@ -4,11 +4,11 @@ import { AuthController } from "./auth.controller";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import { JwtStrategy } from "./jwt.strategy";
-import { UserRepository } from "./user.repository";
-import { PrismaUserRepository } from "./prisma-user.repository";
+import { AuthRepository } from "./repo/auth.repository";
+import { PrismaAuthRepository } from "./repo/prisma-auth.repository";
 import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
-import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
+import { PrismaNotificationsRepository } from "src/notifications/repo/prisma-notifications.repository";
 
 @Module({
   controllers: [AuthController],
@@ -16,8 +16,8 @@ import { PrismaNotificationsRepository } from "src/notifications/prisma-notifica
     AuthService,
     JwtStrategy,
     {
-      provide: UserRepository,
-      useClass: PrismaUserRepository,
+      provide: AuthRepository,
+      useClass: PrismaAuthRepository,
     },
     {
       provide: NotificationsRepository,

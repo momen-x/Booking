@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { CreateProviderRequestDto } from "./dto/create-provider-request.dto";
-import { ProviderRequestRepository } from "./provider-request.repository";
+import { ProviderRequestRepository } from "./repo/provider-request.repository";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
 import { UpdateProviderRequestDto } from "./dto/update-provider-request.dto";
-import { ProviderProfileRepository } from "src/provider-profile/provider-profile.repository";
+import { ProviderProfileRepository } from "src/provider-profile/repo/provider-profile.repository";
 
 @Injectable()
 export class ProviderRequestService {

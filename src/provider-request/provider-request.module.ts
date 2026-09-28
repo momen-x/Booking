@@ -4,17 +4,17 @@ import { ProviderRequestController } from "./provider-request.controller";
 import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
 import { UsersModule } from "src/users/users.module";
 import { JwtModule } from "@nestjs/jwt";
-import { ProviderRequestRepository } from "./provider-request.repository";
-import { PrismaProviderRequestRepository } from "./prisma-provider-request.repository";
-import { UserRepository } from "src/users/user.repository";
-import { PrismaUserRepository } from "src/users/prisma-user.repository";
+import { ProviderRequestRepository } from "./repo/provider-request.repository";
+import { PrismaProviderRequestRepository } from "./repo/prisma-provider-request.repository";
+import { UserRepository } from "src/users/repo/user.repository";
+import { PrismaUserRepository } from "src/users/repo/prisma-user.repository";
 import { MulterModule } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
-import { PrismaNotificationsRepository } from "src/notifications/prisma-notifications.repository";
-import { ProviderProfileRepository } from "src/provider-profile/provider-profile.repository";
-import { PrismaProviderProfileRepository } from "src/provider-profile/prisma-provider-profile.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
+import { PrismaNotificationsRepository } from "src/notifications/repo/prisma-notifications.repository";
+import { ProviderProfileRepository } from "src/provider-profile/repo/provider-profile.repository";
+import { PrismaProviderProfileRepository } from "src/provider-profile/repo/prisma-provider-profile.repository";
 
 @Module({
   controllers: [ProviderRequestController],

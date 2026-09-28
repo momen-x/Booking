@@ -6,9 +6,9 @@ import {
 } from "@nestjs/common";
 import { CreateAvailabilityDto } from "./dto/create-availability.dto";
 import { UpdateAvailabilityDto } from "./dto/update-availability.dto";
-import { AvailabilityRepository } from "./availability.repository";
+import { AvailabilityRepository } from "./repo/availability.repository";
 import { UserRole } from "@prisma/client";
-import { ProviderProfileRepository } from "src/provider-profile/provider-profile.repository";
+import { ProviderProfileRepository } from "src/provider-profile/repo/provider-profile.repository";
 
 @Injectable()
 export class AvailabilityService {

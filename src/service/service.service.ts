@@ -6,12 +6,12 @@ import {
 } from "@nestjs/common";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
-import { ServiceRepository } from "./service.repository";
+import { ServiceRepository } from "./repo/service.repository";
 import { UserRole } from "@prisma/client";
-import { ProviderProfileRepository } from "../provider-profile/provider-profile.repository";
+import { ProviderProfileRepository } from "../provider-profile/repo/provider-profile.repository";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
-import { UserRepository } from "src/users/user.repository";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { UserRepository } from "src/users/repo/user.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
 import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
 
 @Injectable()

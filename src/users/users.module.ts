@@ -2,15 +2,15 @@ import { BadRequestException, Module } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { UsersController } from "./users.controller";
 import { JwtModule } from "@nestjs/jwt";
-import { UserRepository } from "./user.repository";
-import { PrismaUserRepository } from "./prisma-user.repository";
+import { UserRepository } from "./repo/user.repository";
+import { PrismaUserRepository } from "./repo/prisma-user.repository";
 import { AuthRolesGuard } from "./role.guard";
 import { PrismaModule } from "src/infrastructure/prisma/prisma.module";
 import { MulterModule } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { CloudinaryService } from "src/cloudinary/cloudinary.service";
-import { BookingRepository } from "src/bookings/booking.repository";
-import { PrismaBookingRepository } from "src/bookings/prisma-booking.repository";
+import { BookingRepository } from "src/bookings/repo/booking.repository";
+import { PrismaBookingRepository } from "src/bookings/repo/prisma-booking.repository";
 
 @Module({
   controllers: [UsersController],

@@ -1,7 +1,7 @@
 import {
-  BadRequestException,
   Injectable,
   UnauthorizedException,
+  ConflictException,
 } from "@nestjs/common";
 import { RegisterUserDto } from "./dto/register-auth.dto";
 import { LoginUserDto } from "./dto/login-auth.dto";
@@ -9,21 +9,26 @@ import * as bcrypt from "bcryptjs";
 import { JWTPayloadType } from "utils/types";
 import { UserRole } from "@prisma/client";
 import { JwtService } from "@nestjs/jwt";
-import { UserRepository } from "./user.repository";
-import { NotificationsRepository } from "src/notifications/notifications.repository";
+import { AuthRepository } from "./repo/auth.repository";
+import { NotificationsRepository } from "src/notifications/repo/notifications.repository";
 import { CreateNotificationDTO } from "src/notifications/dto/create-notifications.dto";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private authRepo: UserRepository,
+    private authRepo: AuthRepository,
     private jwtService: JwtService,
     private notificationRepo: NotificationsRepository,
   ) {}
   async register(dto: RegisterUserDto): Promise<{ access_token: string }> {
     const isExistUser = await this.authRepo.findByEmail(dto.email);
     if (isExistUser)
-      throw new BadRequestException("User with this email already exists");
+      throw new ConflictException({
+        statusCode: 409,
+        error: "Conflict",
+        message: "An account with this email already exists.",
+        code: "EMAIL_ALREADY_EXISTS", // Machine-readable code for frontend i18n
+      });
     const hashPassword = await bcrypt.hash(dto.password, 12);
     const newUser = await this.authRepo.create({
       email: dto.email,
@@ -46,7 +51,7 @@ export class AuthService {
   }
   async login(loginUser: LoginUserDto): Promise<{ access_token: string }> {
     const isExistUser = await this.authRepo.findByEmail(loginUser.email);
-    if (!isExistUser) throw new BadRequestException("Invalid credentials");
+    if (!isExistUser) throw new UnauthorizedException("Invalid credentials");
     const isPasswordMatch = await bcrypt.compare(
       loginUser.password,
       isExistUser.password,
